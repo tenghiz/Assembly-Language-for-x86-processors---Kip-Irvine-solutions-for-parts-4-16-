@@ -1,0 +1,376 @@
+; 9.10 - 11 - Letter Matrix / Sets with vowels
+
+INCLUDE Irvine32.inc
+
+LetterMatrix proto,
+arr1: ptr byte,
+arr1leng : dword,
+arr2 : ptr byte,
+arr2leng : dword,
+matr : ptr byte,
+matrleng : dword
+
+printMatrix proto,
+mat : ptr byte,
+nN : dword
+
+printStrokes proto,
+mat : ptr byte,
+arr1 : ptr byte,
+nN : dword
+
+printRows proto,
+mat : ptr byte,
+arr1 : ptr byte,
+nN : dword,
+nNsquare : dword
+
+printDiag1 proto,
+mat : ptr byte,
+arr1 : ptr byte,
+nN : dword,
+nNsquare : dword
+
+printDiag2 proto,
+mat : ptr byte,
+arr1 : ptr byte,
+nN : dword,
+nNsquare : dword
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+N = 4
+
+array1 byte "euioa", 0
+array2 byte "qwrtypsdfghjklzxcvbnm", 0
+
+matrix byte N*N dup(? )
+
+prompt byte "Matrix: ", 0
+prompt1 byte "Strokes: ", 0
+prompt2 byte "Rows: ", 0
+prompt3 byte "Diagonal1: ", 0
+prompt4 byte "Diagonal2: ", 0
+
+.code
+main PROC
+
+invoke LetterMatrix, addr array1, lengthof array1, addr array2, lengthof array2, addr matrix, N*N
+
+mov edx, offset prompt
+call WriteString
+call Crlf
+
+invoke printMatrix, addr matrix, N
+
+call Crlf
+mov edx, offset prompt1
+call WriteString
+call Crlf
+
+invoke printStrokes, addr matrix, addr array1, N
+
+call Crlf
+mov edx, offset prompt2
+call WriteString
+call Crlf
+
+invoke printRows, addr matrix, addr array1, N, N*N
+
+call Crlf
+mov edx, offset prompt3
+call WriteString
+call Crlf
+
+invoke printDiag1, addr matrix, addr array1, N, N*N
+
+call Crlf
+mov edx, offset prompt4
+call WriteString
+call Crlf
+
+invoke printDiag2, addr matrix, addr array1, N, N*N
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+LetterMatrix proc uses eax ecx edx esi edi,
+arr1: ptr byte,
+arr1leng: dword,
+arr2: ptr byte,
+arr2leng : dword,
+matr: ptr byte,
+matrleng: dword
+
+call Randomize
+mov ecx, matrleng
+mov edx, matr
+L4 :
+
+mov eax, 2; this block chooses with 50 % probability vowel
+call RandomRange
+cmp eax, 0
+jne L1
+
+mov esi, arr1
+mov eax, arr1leng
+dec eax
+call RandomRange
+add esi, eax
+mov byte ptr al, [esi]
+mov [edx], al
+jmp L2
+
+L1 :
+mov edi, arr2
+mov eax, arr2leng
+dec eax
+call RandomRange
+add edi, eax
+mov byte ptr al, [edi]
+mov[edx], al
+L2 :
+inc edx
+loop L4
+
+ret
+LetterMatrix endp
+
+
+printMatrix proc uses esi ecx ebx eax,
+mat: ptr byte,
+nN: dword
+mov ecx, nN
+mov esi, mat
+L5 :
+mov ebx, 0
+L7 :
+cmp ebx, nN
+je L6
+mov byte ptr al, [esi]
+call WriteChar
+mov al, ' '
+call WriteChar
+inc esi
+inc ebx
+jmp L7
+L6 :
+call Crlf
+loop L5
+ret
+printMatrix endp
+
+
+printStrokes proc uses ecx edi esi edx eax ebx,
+mat: ptr byte,
+arr1: ptr byte,
+nN:dword
+mov ecx, nN
+mov esi, mat
+L14 :
+push ecx
+mov edx, 0
+mov ecx, nN
+L8 :
+mov al, [esi]
+mov edi, arr1
+L9 :
+mov bl, [edi]
+cmp bl, 0
+je L12
+cmp al, bl
+je L10
+inc edi
+jmp L9
+L10 :
+inc edx
+L12 :
+inc esi
+loop L8
+
+cmp edx, 2
+jne L11
+
+mov edi, esi
+sub edi, nN
+mov ecx, nN
+L13 :
+mov al, [edi]
+call WriteChar
+mov al, ' '
+call WriteChar
+inc edi
+loop L13
+call Crlf
+
+L11 :
+pop ecx
+loop L14
+
+ret
+printStrokes endp
+
+
+printRows proc uses ecx edi esi edx eax ebx,
+mat: ptr byte,
+arr1 : ptr byte,
+nN : dword,
+nNsquare:dword
+mov ecx, nN
+mov esi, mat
+L15 :
+push ecx
+mov edx, 0
+mov ecx, nN
+L16 :
+mov al, [esi]
+mov edi, arr1
+L17 :
+mov bl, [edi]
+cmp bl, 0
+je L19
+cmp al, bl
+je L18
+inc edi
+jmp L17
+L18 :
+inc edx
+L19 :
+add esi, nN
+loop L16
+
+cmp edx, 2
+jne L20
+
+mov edi, esi
+mov ebx, nNsquare
+sub edi, ebx
+mov ecx, nN
+L21 :
+mov al, [edi]
+call WriteChar
+mov al, ' '
+call WriteChar
+add edi, nN
+loop L21
+call Crlf
+
+L20 :
+pop ecx
+mov ebx, nNsquare
+sub esi, ebx
+inc esi
+loop L15
+
+ret
+printRows endp
+
+
+printDiag1 proc uses ecx edi esi edx eax ebx,
+mat: ptr byte,
+arr1 : ptr byte,
+nN : dword,
+nNsquare : dword
+mov esi, mat
+mov edx, 0
+mov ecx, nN
+L22 :
+mov al, [esi]
+mov edi, arr1
+L23 :
+mov bl, [edi]
+cmp bl, 0
+je L25
+cmp al, bl
+je L24
+inc edi
+jmp L23
+L24 :
+inc edx
+L25 :
+add esi, nN
+inc esi
+loop L22
+
+cmp edx, 2
+jne L26
+
+mov ebx, nNsquare
+add ebx, nN
+sub esi, ebx
+mov ecx, nN
+L27 :
+mov al, [esi]
+call WriteChar
+mov al, ' '
+call WriteChar
+add esi, nN
+inc esi
+loop L27
+call Crlf
+
+L26 :
+ret
+printDiag1 endp
+
+
+printDiag2 proc uses ecx edi esi edx eax ebx,
+mat : ptr byte,
+arr1 : ptr byte,
+nN : dword,
+nNsquare : dword
+mov esi, mat
+add esi, nN
+dec esi
+mov edx, 0
+mov ecx, nN
+L28 :
+mov al, [esi]
+mov edi, arr1
+L29 :
+mov bl, [edi]
+cmp bl, 0
+je L30
+cmp al, bl
+je L31
+inc edi
+jmp L29
+L31 :
+inc edx
+L30 :
+add esi, nN
+dec esi
+loop L28
+
+cmp edx, 2
+jne L32
+
+mov ebx, nNsquare
+sub esi, ebx
+add esi, nN
+mov ecx, nN
+L33 :
+mov al, [esi]
+call WriteChar
+mov al, ' '
+call WriteChar
+add esi, nN
+dec esi
+loop L33
+call Crlf
+
+L32 :
+ret
+printDiag2 endp
+
+
+END main

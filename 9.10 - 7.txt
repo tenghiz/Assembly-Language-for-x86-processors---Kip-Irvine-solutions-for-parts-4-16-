@@ -1,0 +1,75 @@
+; 9.10 - 7 - Sieve of Eratosthenes
+
+; Slightly modified program:
+;prime numbers are marked by 0, all multiples of primes are marked by themselves.
+
+INCLUDE Irvine32.inc
+
+SieveOfErat proto,
+array1: ptr dword,
+Nelements : dword
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+; .data
+
+N = 1000
+.data?
+bigArray dword N DUP(?)
+
+.code
+main PROC
+
+invoke SieveOfErat, addr bigArray, N
+
+mov esi, offset bigArray
+mov ecx, lengthof bigArray
+L10:
+mov eax, [esi]
+call WriteDec
+mov al, ' '
+call WriteChar
+add esi, 4
+loop L10
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+SieveOfErat proc,
+array1: ptr dword,
+Nelements : dword
+mov cx, 2; first prime number/multiplicand
+L1 :
+mov bx, 2;first multiplier
+L3 :
+mov eax, 0
+mov ax, cx
+cmp eax, Nelements; quit the loop
+je L4
+mul bx; when ax*bx, result is placed in dx : ax
+shl edx, 16; the product of mul is moved completely in edx
+mov dx, ax
+cmp edx, Nelements; jump to next multiplicand
+jae L2
+mov esi, array1
+mov edi, edx
+shl edi, 2; mul edx*4 in order to adjust dword offset
+add esi, edi
+mov dword ptr [esi], edx
+inc bx
+jmp L3
+L2 :
+inc cx
+jmp L1
+L4 :
+ret
+SieveOfErat endp
+
+END main

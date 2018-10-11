@@ -1,0 +1,53 @@
+; 9.10 - 2 - Concatenation of 2 strings
+
+INCLUDE Irvine32.inc
+
+Str_concat proto,
+source:ptr byte,
+target : ptr byte
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+array1 byte "abcde", 0
+array2 byte "fghij",0
+
+.code
+main PROC
+
+INVOKE Str_concat, ADDR array1, ADDR array2
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+Str_concat proc,
+source:ptr byte,
+target:ptr byte
+mov esi, source
+mov edi, target
+L1 :
+mov al, [edi]
+cmp al, 0
+je L2
+inc edi
+jmp L1
+
+L2 :
+mov bl, [esi]
+mov [edi], bl
+inc esi
+inc edi
+cmp bl, 0
+je L3
+jmp L2
+
+L3 :
+ret
+Str_concat endp
+
+END main

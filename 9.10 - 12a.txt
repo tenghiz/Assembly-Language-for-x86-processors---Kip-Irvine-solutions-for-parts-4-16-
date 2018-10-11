@@ -1,0 +1,128 @@
+; 9.10 - 12 - Calculating the Sum of an Array Row
+
+;This program consists of 3 sections:
+; the first one generates an array of length N*N(non - repeating numbers),
+; then randomizes all elements in array.
+; The second section prints the array in form of 2D - matrix.
+; The third section prompts user for row number, prints selected row and its sum.
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+N = 4
+
+array1 dword N*N dup(0)
+
+prompt byte "Enter row number: ", 0
+prompt1 byte "The sum of row is ", 0
+
+.code
+main PROC
+
+push offset prompt1; [ebp + 28]
+push offset prompt; [ebp + 24]
+push offset array1; [ebp + 20]
+push lengthof array1; [ebp + 16]
+push type array1;[ebp + 12]
+push N;[ebp+8]
+call generateMatrix
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+generateMatrix proc
+push ebp
+mov ebp, esp
+
+; Fill an array of length N*N with numbers from 1 to N*N
+mov esi, [ebp + 20]; offset array1
+mov ecx, [ebp + 16]; lengthof array1
+mov eax, 1
+L1:
+mov[esi], eax
+inc eax
+add esi, [ebp + 12]; type array1
+loop L1
+
+; Randomize elements in array
+call Randomize
+mov esi, [ebp + 20]; offset array1
+mov ecx, [ebp + 16]; lengthof array1
+L2 :
+mov ebx, [esi]
+mov eax, [ebp+8]; N
+call RandomRange
+shl eax, 2; adjust content of eax to dword
+mov edi, [ebp + 20]; offset array1
+add edi, eax
+xchg ebx, [edi]
+mov[esi], ebx
+add esi, [ebp + 12]; type array1
+loop L2
+
+; Print array in form of 2D matrix
+mov esi, [ebp + 20]; offset array1
+mov ecx, [ebp + 8]; N
+L3 :
+mov ebx, 0
+L4 :
+cmp ebx, [ebp + 8]; N
+je L5
+mov eax, [esi]
+call WriteDec
+mov al, ' '
+call WriteChar
+add esi, [ebp + 12]; type array1
+inc ebx
+jmp L4
+L5 :
+call Crlf
+loop L3
+
+call Crlf
+
+mov edx, [ebp + 24]; offset prompt
+call WriteString
+
+; Print selected row and then its sum
+call ReadDec; number of selected row is passed to eax
+mov ebx, [ebp + 8]; N length of row
+mul ebx; eax*ebx-- > gives the position of current row(index of starting element)
+shl eax, 2; relative offset of selected row
+mov esi, [ebp + 20]; offset array1
+add esi, eax
+mov ecx, [ebp + 8]; N
+mov ebx, 0
+L6:
+mov eax, [esi]
+add ebx, eax
+call WriteDec
+mov al, ' '
+call WriteChar
+add esi, [ebp + 12]; type array1
+loop L6
+push ebx
+
+call Crlf
+
+mov edx, [ebp + 28]; offset prompt
+call WriteString
+
+pop eax
+call WriteDec
+
+pop ebp
+ret
+generateMatrix endp
+
+END main

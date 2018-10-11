@@ -1,0 +1,52 @@
+; 9.10 - 3 - Str_remove Procedure
+; offset, starting position, number of characters to remove
+
+INCLUDE Irvine32.inc
+
+Str_remove proto,
+string:ptr byte,
+start : dword,
+Nremove : dword
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+target BYTE "abcxxxxdefghijklmop", 0
+
+.code
+main PROC
+
+INVOKE Str_remove, ADDR target, 3, 4
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+Str_remove proc uses esi edi eax,
+string:ptr byte,
+start:dword,
+Nremove:dword
+
+mov esi, string
+add esi, start
+mov edi, esi
+add edi, Nremove
+L1:
+mov al, [edi]
+mov[esi], al
+mov byte ptr[edi], 0; this command clears the space behind null byte
+inc esi
+inc edi
+cmp al, 0
+je L2
+jmp L1
+
+L2 :
+ret
+Str_remove endp
+
+END main

@@ -1,0 +1,66 @@
+; 9.10 - 5 - Str_nextWord
+; scans a string for the first occurrence of a certain
+; delimiter character and replaces the delimiter with a null byte
+
+;Program is slightly modified, EBX is set if delimiter is found.
+
+INCLUDE Irvine32.inc
+
+Str_nextWord proto,
+target: ptr byte,
+delimiter : byte
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+array1 BYTE "Johnson,Calvin", 0
+
+.code
+main PROC
+
+INVOKE Str_nextWord, ADDR array1, ','
+
+mov edx, offset array1
+call WriteString
+call Crlf
+
+cmp ebx, 1
+jne quit
+mov edx, eax
+call WriteString
+call Crlf
+
+quit:
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+Str_nextWord proc uses esi,
+target: ptr byte,
+delimiter: byte
+mov esi, target
+L1 :
+mov al, [esi]
+cmp al, 0
+je L2
+mov bl, delimiter
+cmp al, bl
+jne L3
+mov byte ptr[esi], 0
+inc esi
+mov eax, esi
+mov ebx, 1
+jmp L2
+L3:
+inc esi
+jmp L1
+L2 :
+ret
+Str_nextWord endp
+
+END main

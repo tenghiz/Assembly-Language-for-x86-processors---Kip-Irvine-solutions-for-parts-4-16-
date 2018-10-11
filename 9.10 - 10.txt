@@ -1,0 +1,82 @@
+; 9.10 - 9 - Letter Matrix
+
+INCLUDE Irvine32.inc
+
+LetterMatrix proto,
+arr1: ptr byte,
+arr1leng : dword,
+arr2 : ptr byte,
+arr2leng : dword
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+array1 byte "euioa", 0
+array2 byte "qwrtypsdfghjklzxcvbnm", 0
+
+.code
+main PROC
+
+mov ecx, 4
+L10:
+invoke LetterMatrix, addr array1, lengthof array1, addr array2, lengthof array2
+call Crlf
+mov eax, 100
+call Delay; this program is needed to seed Randomize
+loop L10
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+LetterMatrix proc uses eax ecx esi edi,
+arr1: ptr byte,
+arr1leng: dword,
+arr2: ptr byte,
+arr2leng : dword
+
+call Randomize
+mov ecx, 4; number of lines
+L4 :
+push ecx
+mov ecx, 4; number of elements in each line
+L3 :
+mov eax, 2; this block chooses with 50 % probability vowel
+call RandomRange
+cmp eax, 0
+jne L1
+
+mov esi, arr1
+mov eax, arr1leng
+dec eax
+call RandomRange
+add esi, eax
+mov byte ptr al, [esi]
+call WriteChar
+jmp L2
+
+L1 :
+mov edi, arr2
+mov eax, arr2leng
+dec eax
+call RandomRange
+add edi, eax
+mov byte ptr al, [edi]
+call WriteChar
+L2 :
+mov al, ' '
+call WriteChar
+
+loop L3
+call Crlf
+pop ecx
+loop L4
+
+ret
+LetterMatrix endp
+
+END main

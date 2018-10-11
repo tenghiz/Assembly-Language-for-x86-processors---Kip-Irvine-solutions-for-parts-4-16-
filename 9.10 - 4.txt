@@ -1,0 +1,123 @@
+; 9.10 - 4 - Str_find
+
+; First part of the program determines the length of target string
+; and set ECX.
+; Second part uses ECX as a loop counter and look for the sequence in target string.
+; If found, offset and index are saved in memory.
+
+INCLUDE Irvine32.inc
+
+Str_leng proto,
+TargStr: ptr byte
+
+Str_find proto,
+TargStr : ptr byte,
+SourceStr : ptr byte
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+target BYTE "123ABC356", 0
+source BYTE "BC", 0
+posOffset dword ?
+pos DWORD ?
+
+prompt1 byte "Found", 0
+prompt2 byte "Offset: ",0
+prompt3 byte "Index: ",0
+prompt4 byte "Not found", 0
+
+.code
+main PROC
+
+invoke Str_leng, addr target
+
+or al, 1; set ZR=0
+
+invoke Str_find, addr target, addr source
+
+jz notFound
+
+mov edx, offset prompt1
+call WriteString
+call Crlf
+
+mov edx, offset prompt2
+call WriteString
+
+mov eax, posOffset
+call WriteHex
+call Crlf
+
+mov edx, offset prompt3
+call WriteString
+
+mov eax, pos
+call WriteDec
+call Crlf
+
+jmp exitexit
+
+notFound:
+mov edx, offset prompt4
+call WriteString
+call Crlf
+
+exitexit:
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+Str_leng proc uses esi eax,
+TargStr: ptr byte
+mov esi, TargStr
+mov ecx, 0
+L1:
+mov al, [esi]
+cmp al, 0
+je L2
+inc ecx
+inc esi
+jmp L1
+L2 :
+ret
+Str_leng endp
+
+Str_find proc uses esi edi edx ebx eax,
+TargStr : ptr byte,
+SourceStr : ptr byte
+mov esi, TargStr
+L5 : ; ----------------------------------------outer loop uses ECX
+mov edx, esi
+mov edi, SourceStr
+L8 : ; -------------------- - inner loop
+mov al, [edx]
+mov bl, [edi]
+cmp bl, 0
+je L6
+cmp al, bl
+jne L7
+inc edx
+inc edi
+jmp L8; --------------------- inner loop
+L6 :
+mov posOffset, esi; offset of matching position
+mov eax, esi
+test dl, 0; set ZR=1
+jmp L9
+L7 :
+inc esi
+loop L5; ---------------------------------------------------outer loop
+L9 :
+mov esi, TargStr
+sub eax, esi
+mov pos, eax; shows index of matching position
+ret
+Str_find endp
+
+END main

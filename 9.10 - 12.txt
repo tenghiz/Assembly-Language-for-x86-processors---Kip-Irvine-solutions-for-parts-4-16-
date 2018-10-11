@@ -1,0 +1,112 @@
+; 9.10 - 12 - Calculating the Sum of an Array Row
+
+;This program consists of 3 sections:
+; the first one generates an array of length N*N(non - repeating numbers),
+; then randomizes all elements in array.
+; The second section prints the array in form of 2D - matrix.
+; The third section prompts user for row number, prints selected row and its sum.
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+N = 4
+
+array1 dword N*N dup(0)
+
+prompt byte "Enter row number: ", 0
+prompt1 byte "The sum of row is ", 0
+
+.code
+main PROC
+
+; Fill an array of length N*N with numbers from 1 to N*N
+mov esi, offset array1
+mov ecx, lengthof array1
+mov eax, 1
+L1:
+mov[esi], eax
+inc eax
+add esi, type array1
+loop L1
+
+;Randomize elements in array
+call Randomize
+mov esi, offset array1
+mov ecx, lengthof array1
+L2:
+mov ebx, [esi]
+mov eax, N
+call RandomRange
+shl eax, 2; adjust content of eax to dword
+mov edi, offset array1
+add edi, eax
+xchg ebx, [edi]
+mov[esi], ebx
+add esi, type array1
+loop L2
+
+;Print array in form of 2D matrix
+mov esi, offset array1
+mov ecx, N
+L3:
+mov ebx, 0
+L4:
+cmp ebx, N
+je L5
+mov eax, [esi]
+call WriteDec
+mov al, ' '
+call WriteChar
+add esi, type array1
+inc ebx
+jmp L4
+L5:
+call Crlf
+loop L3
+
+call Crlf
+
+mov edx, offset prompt
+call WriteString
+
+; Print selected row and then its sum
+call ReadDec; number of selected row is passed to eax
+mov ebx, N; length of row
+mul ebx; eax*ebx-- > gives the position of current row(index of starting element)
+shl eax, 2; relative offset of selected row
+mov esi, offset array1
+add esi, eax
+mov ecx, N
+mov ebx, 0
+L6:
+mov eax, [esi]
+add ebx, eax
+call WriteDec
+mov al, ' '
+call WriteChar
+add esi, type array1
+loop L6
+push ebx
+
+call Crlf
+
+mov edx, offset prompt1
+call WriteString
+
+pop eax
+call WriteDec
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main
