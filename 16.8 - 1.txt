@@ -1,0 +1,107 @@
+;16.8 - 1 - ASCII table
+
+;Due to unknown reason, this program requires the use of Crlscr subroutine
+;before writing the ASCII table, otherwise it's impossible to increment row.
+
+;This difficulty can be bypassed using Crlf subroutine. In this case user need to 
+;get first current cursor position and video mode.
+
+.model small
+.stack 100h
+.386
+
+.data
+
+char db 1h
+row db 0
+column db 0
+start_row db 0
+start_column db 0
+crlf db 0dh, 0ah, "$"
+video_page db 0
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+mov es, ax
+
+comment @
+;get video mode
+mov ah, 0fh
+int 10h
+mov video_page, bh
+
+;get initial cursor position
+mov ah, 3
+mov bh, video_page
+int 10h
+mov start_row, dh
+mov start_column, dl
+@
+
+;clrscr
+mov ax, 0600h
+mov cx, 0
+mov dx, 184fh
+mov bh, 7
+int 10h
+mov ah, 2
+mov bh, 0
+mov dx, 0
+int 10h
+
+;write ASCII symbols
+mov al, start_row
+mov row, al
+mov cx, 16d
+L1:
+push cx
+
+mov al, start_column
+mov column, al
+mov cx, 16d
+L2:
+push cx
+
+;write char
+mov ah, 0ah
+mov al, char
+mov bh, video_page
+mov cx, 1
+int 10h
+
+;increase X coordinate
+mov al, column
+add al, 2
+mov column, al
+
+mov ax, 0
+
+;advance cursor
+mov ah,2
+mov dl, column
+mov dh, row
+mov bh, video_page
+int 10h
+
+inc char
+
+pop cx
+loop L2
+
+inc row
+
+;mov ah, 9
+;mov dx, offset crlf
+;int 21h
+
+pop cx
+loop L1
+
+mov ah, 4ch
+int 21h
+
+main endp
+end main

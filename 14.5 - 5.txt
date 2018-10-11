@@ -1,0 +1,233 @@
+;14.5 - 5 - File creation date
+
+;This program was run under XP (Intel Atom) using masm32 development environment's link16.exe.
+;(Macro ASM v.6.14.8444, 1997, segmented executable linker v.5.60.339, 1994).
+;Please include .386 directive, otherwise ML doesn't support bit-shifting operations
+
+;Development tool doesn't allow to enter file's name via console.
+
+;Comments on program:
+; DOS function int 21h ah=5700h retrieves file creation date
+; Bitfields for date: bits 15-9 (year + 1980), bits 8-5 (month), bits 4-0 (day).
+
+.model small
+.stack 100h
+.386
+
+count = 50
+
+.data
+
+maxFileNameSize db count
+FileNameSize db 0
+fileName db count dup(0)
+
+file_name db "C:\masm32\help\masm32.chm", 0
+sizeofname = $ - file_name
+
+handle dw 0
+
+date dw 0
+
+prompt1 db "Please enter the file name: $"
+prompt2 db "ERROR!$"
+prompt3 db "DATE content in hexadecimal format: $"
+prompt4 db "Date in format yy:mm:dd  $"
+crlf db 0dh, 0ah, "$"
+
+counter db 12d
+
+.code
+
+main proc
+
+mov ax, @data
+mov ds, ax
+
+comment @
+;This part prompts user to enter file's name,
+;then opens the file and gets its handle 
+;write $-terminated string
+mov ah, 9
+mov dx, offset prompt1
+int 21h
+
+;Read an array from keyboard
+mov ah, 0ah
+mov dx, offset maxFileNameSize
+int 21h
+
+;Insert NULL at the end of file_name
+mov si, offset fileName
+mov ax, 0
+mov al, FileNameSize
+add si, ax
+mov si, 0
+@
+
+;write a filename on console
+mov ah, 40h
+mov bx, 1
+mov cx,0
+mov cl, sizeofname
+mov dx, offset file_name
+int 21h
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;open file
+mov ax, 716ch
+mov bx, 0
+mov cx, 0
+mov dx, 1
+mov si, offset file_name 
+int 21h
+jc failed
+mov handle, ax
+
+;get file's creation date
+mov ax, 5706h
+mov bx, handle
+int 21h
+jc failed
+mov date, dx
+
+;Write $-terminated string
+mov ah, 9
+mov dx, offset prompt3
+int 21h
+
+;write DATE content in hex
+mov cx, 4
+L5:
+push cx
+mov dx, date
+mov cl, counter
+shr dx, cl
+sub cl, 4
+mov counter, cl
+and dx, 0fh
+L6:
+mov bl, 0ah
+cmp dl, bl
+jb L7
+mov cx, 6
+mov al, 'A'
+L8:
+cmp dl, bl
+jne L9
+mov dl, al
+jmp L10
+L9:
+inc bl
+inc al
+loop L8 
+L7:
+or dl, 30h
+L10:
+mov ah, 2
+int 21h
+pop cx
+loop L5
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;Write $-terminated string
+mov ah, 9
+mov dx, offset prompt4
+int 21h
+
+; extract YEAR from DATE (upper 7 bits) and transform it to char
+mov ax, date
+shr ax, 9
+add ax, 1980d; year counts from 1980	
+mov bx, 0ah
+mov cx, 4
+L1:
+mov dx, 0
+div bx
+or dl, 30h
+push dx
+loop L1
+
+; write YEAR on console
+mov cx, 4
+L2:
+mov ah,2
+pop dx 
+int 21h
+loop L2
+
+;Write ":"
+mov ah, 2
+mov dl, ":"
+int 21h
+
+;extract MONTH from DATE (bits 8-5)
+mov ax, date
+and ax, 111100000b
+shr ax, 5
+mov bl, 0ah
+div bl
+or ah, 30h
+or al, 30h
+mov ch, ah
+mov cl, al
+
+;write MONTH on console
+mov ah,2
+mov dl,cl  
+int 21h
+mov ah,2
+mov dl,ch  
+int 21h
+
+;Write ":"
+mov ah, 2
+mov dl, ":"
+int 21h
+
+;extract DAY from YEAR (bits 4-0)
+mov ax, date
+and ax, 011111b
+mov bl, 0ah
+div bl
+or ah, 30h
+or al, 30h
+mov ch, ah
+mov cl, al
+
+;write DAY on console
+mov ah,2
+mov dl,cl  
+int 21h
+mov ah,2
+mov dl,ch  
+int 21h
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+jmp exit
+
+failed:
+
+mov ah, 9
+lea dx, prompt2
+int 21h
+
+exit:
+
+mov ah, 4ch
+int 21h
+
+main endp
+end main

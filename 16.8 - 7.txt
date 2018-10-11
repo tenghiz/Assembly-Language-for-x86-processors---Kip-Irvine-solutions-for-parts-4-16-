@@ -1,0 +1,137 @@
+;16.8 - 7 - Draw single vertical line
+
+;Video mode 13h: 320x200.
+
+; Video memory is a linear space which begins at offset 0A000h.
+; "LINEAR" means that there is no "rows" and "columns" inside.
+;Thus, drawing a pixel at location (X, Y) = (160, 100) requires following operation:
+;Y*320 + X = 100*320 + 160.
+;This value must be added to offset of video memory (DI).
+
+;NB! Try to use shifting instead of multiplication.
+; 320 = 256 + 64 = 2^8 + 2^6.
+
+;Drawing horizontal line: INC DI;
+;Drawing vertical line: ADD DI, 320;
+;Drawing diagonal line: ADD Di, 320; ADD DI, BX (BX = const);
+
+;Here program draws parabole.
+
+.model small
+.stack 100h
+.386
+
+Mode_06 = 6 ; 640 X 200, 2 colors
+Mode_0D = 0Dh ; 320 X 200, 16 colors
+Mode_0E = 0Eh ; 640 X 200, 16 colors
+Mode_0F = 0Fh ; 640 X 350, 2 colors
+Mode_10 = 10h ; 640 X 350, 16 colors
+Mode_11 = 11h ; 640 X 480, 2 colors
+Mode_12 = 12h ; 640 X 480, 16 colors
+Mode_13 = 13h ; 320 X 200, 256 colors
+Mode_6A = 6Ah ; 800 X 600, 16 colors
+
+VIDEO_PALLETE_PORT = 3C8h
+COLOR_SELECTION_PORT = 3C9h
+COLOR_INDEX = 1
+PALLETE_INDEX_BACKGROUND = 0
+SET_VIDEO_MODE = 0
+GET_VIDEO_MODE = 0Fh
+VIDE0_SEGMENT = 0A000h
+WAIT_FOR_KEYSTROKE = 10h
+
+.data
+
+saveMode BYTE ? 
+xVal WORD ?
+yVal WORD ?
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+;Saves the current video mode, switches to a
+; new mode, and points ES to the video segment.
+mov ah,GET_VIDEO_MODE
+int 10h
+mov saveMode,al ; save it
+mov ah,SET_VIDEO_MODE
+mov al,Mode_13 ; to mode 13h
+int 10h
+push VIDE0_SEGMENT ; video segment address
+pop es ; ES points to video segment
+
+;Sets the screen's background color. Video
+; palette index 0 is the background color.
+mov dx,VIDEO_PALLETE_PORT
+mov al,PALLETE_INDEX_BACKGROUND
+out dx,al
+; Set the screen background color to dark blue.
+mov dx,COLOR_SELECTION_PORT
+mov al,0 ; red
+out dx,al
+mov al,0 ; green
+out dx,al
+mov al,35 ; blue (intensity 35/63)
+out dx,al
+
+; Sets individual palette colors and draws
+; several pixels.
+; Change the color at index 1 to white (63,63,63).
+mov dx,VIDEO_PALLETE_PORT
+mov al,1 ; set palette index 1
+out dx,al
+mov dx,COLOR_SELECTION_PORT
+mov al,63 ; red
+out dx,al
+mov al,63 ; green
+out dx,al
+mov al,63 ; blue
+out dx,al
+
+; Calculate the video buffer offset of the first pixel.
+; Method is specific to mode 13h, which is 320 X 200.
+mov xVal,160 ; middle of screen
+mov yVal,100
+;mov ax,320; 320 for video mode 13h
+;mul yVal ; y-coordinate
+mov ax, yVal
+shl ax, 8
+mov bx, yVal
+shl bx, 6
+add ax, bx
+add ax,xVAl ; x-coordinate
+; Place the color index into the video buffer.
+mov cx,10; draw 10 pixels
+mov di,ax ; AX contains buffer offset
+mov bx, 0
+
+; Draw the pixels now. By default, the assembler assumes
+; DI is an offset from the segment address in DS. The
+; segment override ES:[DI] tells the CPU to use the segment
+; address in ES instead. ES currently points to VRAM.
+DP1:
+mov BYTE PTR es:[di],COLOR_INDEX
+add di,320 ; move 5 pixels to the right
+mov ax, bx
+mul bx
+shr ax, 1; y = 0.5X^2
+add di, ax
+inc bx
+loop DP1
+
+;Waits for a key to be pressed and restores
+; the video mode to its original value.
+mov ah,WAIT_FOR_KEYSTROKE
+int 16h
+mov ah,SET_VIDEO_MODE ; reset video mode
+mov al,saveMode ; to saved mode
+int 10h
+
+mov ah, 4ch
+int 21h
+
+main endp
+end main

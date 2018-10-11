@@ -1,0 +1,203 @@
+;16.8 - 5 - Draw rectangle
+
+;Loop is used to imitate moving of different colored rectangles.
+
+;Rectangle is defined by upper corener and two sides.
+;This approach permits to use random number generator to fill coordinates structure.
+
+;Loop is avoided to fill structure, because following instructions block program execution.
+;-mov esi, offset struct
+;-....
+;-add esi, 2
+
+.model small
+.stack 100h
+.386
+
+Mode_06 = 6 ; 640 X 200, 2 colors
+Mode_0D = 0Dh ; 320 X 200, 16 colors
+Mode_0E = 0Eh ; 640 X 200, 16 colors
+Mode_0F = 0Fh ; 640 X 350, 2 colors
+Mode_10 = 10h ; 640 X 350, 16 colors
+Mode_11 = 11h ; 640 X 480, 2 colors
+Mode_12 = 12h ; 640 X 480, 16 colors
+Mode_13 = 13h ; 320 X 200, 256 colors
+Mode_6A = 6Ah ; 800 X 600, 16 colors
+
+rectangle struct
+x_up dw 0
+y_up dw 0
+horiz dw 0
+vertic dw 0
+rectangle ends
+
+.data
+
+rect rectangle <>
+
+saveMode db 0
+color db 1h
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+; Save the current video mode.
+mov ah,0Fh
+int 10h
+mov saveMode, al
+
+; Switch to a graphics mode.
+mov ah,0 ; set video mode
+mov al,Mode_10
+int 10h
+
+L31:
+
+call fill_struct
+mov rect.x_up, dx
+call fill_struct
+mov rect.y_up, dx
+call fill_struct
+mov rect.horiz, dx
+call fill_struct
+mov rect.vertic, dx
+
+;draw upper line
+movzx ecx, rect.horiz
+mov di, rect.y_up
+mov si, rect.x_up
+call draw_horizont
+
+;draw lower line
+movzx ecx, rect.horiz
+mov di, rect.y_up
+add di, rect.vertic
+mov si, rect.x_up
+call draw_horizont
+
+;draw left side
+movzx ecx, rect.vertic
+mov di, rect.y_up
+mov si, rect.x_up
+call draw_vertic
+
+;draw right side
+movzx ecx, rect.vertic
+mov di, rect.y_up
+mov si, rect.x_up
+add si, rect.horiz
+call draw_vertic
+
+call wait_min
+
+;wait key
+;mov ah, 0
+;int 16h
+
+;set random color
+L21:
+call wait_millisec
+mov ax, 0
+int 1ah
+mov ax, dx
+mov dx, 0
+mov bx, 15
+div bx
+cmp dx, 0
+je L21
+mov color, dl
+
+;scroll window upwards
+mov ah, 6
+mov al, 24;whole screen
+mov cx, 0
+mov dh, 24
+mov dl, 79
+mov bh, 0;black
+int 10h
+
+;checks keyboard buffer, exit if ESC
+mov ax, 0
+mov ah, 11h
+int 16h
+cmp al, 1bh; ESC pressed?
+je quit
+
+jmp L31
+
+quit:
+
+; Restore the starting video mode.
+mov ah,0 ; set video mode
+mov al,saveMode ; saved video mode
+int 10h
+
+mov ah, 4ch
+int 21h
+
+main endp
+
+fill_struct proc
+L11:
+call wait_millisec
+mov ax, 0
+int 1ah
+mov ax, dx
+mov dx, 0
+mov bx, 100
+div bx
+cmp dx, 10
+jbe L11
+ret
+fill_struct endp
+
+draw_horizont proc
+L1:
+push ecx
+mov ah, 0ch
+mov al, color
+mov bh, 0
+mov dx,di
+mov cx,si
+int 10h
+inc si
+pop ecx
+loop L1
+ret
+draw_horizont endp
+
+draw_vertic proc
+L2:
+push ecx
+mov ah, 0ch
+mov al, color
+mov bh, 0
+mov dx,di
+mov cx,si
+int 10h
+inc di
+pop ecx
+loop L2
+ret
+draw_vertic endp
+
+wait_millisec proc
+mov ah, 86h
+mov dx, 80000d; low word
+mov cx, 0;upper word
+int 15h
+ret
+wait_millisec endp
+
+wait_min proc
+mov ah, 86h
+mov dx, 0d620h; low word
+mov cx, 13h;upper word
+int 15h
+ret
+wait_min endp
+
+end main

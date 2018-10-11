@@ -1,0 +1,177 @@
+;15.7 - 5 - 
+
+;Drive specification: "C:\"
+;Bytes per sector: 512
+;Sectors per cluster: 8
+;Total Number of clusters: 999999
+;Number of available clusters: 99999
+
+.model small
+.stack 100h
+.386
+
+ExtGetDskFreSpcStruc STRUC
+StructSize WORD ?
+Level WORD ?
+SectorsPerCluster DWORD ?
+BytesPerSector DWORD ?
+AvailableClusters DWORD ?
+TotalClusters DWORD ?
+AvailablePhysSectors DWORD ?
+TotalPhysSectors DWORD ?
+AvailableAllocationUnits DWORD ?
+TotalAllocationUnits DWORD ?
+Rsvd DWORD 2 DUP (?)
+ExtGetDskFreSpcStruc ENDS
+
+.data
+
+egdfss ExtGetDskFreSpcStruc <>
+
+error_msg db "ERROR!$"
+crlf db 0dh, 0ah, "$"
+
+drive_name db " :\", 0
+drive_msg db "Please enter drive's letter (a, b or c): $"
+ 
+drive_specification db "Drive specification: $"
+bytes_per_sector db "Bytes per sector: $"
+sectors_per_cluster db "Sectors per cluster: $"
+total_clusters db "Total Number of clusters: $"
+available_clusters db "Number of available clusters: $"
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+mov es, ax
+
+;drive_msg
+mov ah, 9
+mov dx, offset drive_msg
+int 21h
+
+;input drive name
+mov ah, 1
+int 21h
+sub al, 20h; transform 'x' to 'X'
+mov si, offset drive_name
+mov byte ptr [si], al
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;get disk free space
+mov egdfss.Level, 0
+mov di, offset egdfss
+mov cx, sizeof egdfss
+mov dx, offset drive_name
+mov ax, 7303h
+int 21h
+jc error
+
+;Drive specification
+mov ah, 9
+mov dx, offset drive_specification
+int 21h
+mov ah, 40h
+mov bx, 1
+mov cx, sizeof drive_name
+mov dx, offset drive_name
+int 21h
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;bytes_per_sector
+mov ah, 9
+mov dx, offset bytes_per_sector
+int 21h
+
+mov eax, egdfss.BytesPerSector
+call hex_to_dec
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;SectorsPerCluster
+mov ah, 9
+mov dx, offset sectors_per_cluster
+int 21h
+
+mov eax, egdfss.SectorsPerCluster
+call hex_to_dec
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;total_clusters
+mov ah, 9
+mov dx, offset total_clusters
+int 21h
+
+mov eax, egdfss.TotalClusters
+call hex_to_dec
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;available_clusters
+mov ah, 9
+mov dx, offset available_clusters
+int 21h
+
+mov eax, egdfss.AvailableClusters
+call hex_to_dec
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+jmp quit
+
+error:
+
+;error_msg
+mov ah, 9
+mov dx, offset error_msg
+int 21h
+
+quit:
+
+mov ah, 4ch
+int 21h
+
+main endp
+
+hex_to_dec proc
+mov ebx, 0ah
+mov ecx, 8
+division:
+mov edx, 0
+div ebx
+push edx
+loop division
+mov ecx, 8
+writechar:
+mov ah, 2
+pop edx
+or dl, 30h
+int 21h
+loop writechar
+ret
+hex_to_dec endp
+
+end main

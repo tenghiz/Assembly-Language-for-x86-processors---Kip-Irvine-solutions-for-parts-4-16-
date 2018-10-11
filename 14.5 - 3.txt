@@ -1,0 +1,198 @@
+; 14.5 - 3 - Get system date
+
+;This program was designed using emu8086 as development tool
+
+; 14.5 - 3 - Get system date
+
+.model small
+.stack 100 h
+       
+count = 15
+       
+.data 
+
+year dw 0 
+month db 0
+day db 0
+day_of_week db 0 
+
+hours db 0
+minutes db 0
+seconds db 0   
+
+date_message db "Date: $" 
+new_date_msg db "Set new date in format yyyy:mm:dd $"
+
+;KEYBOARD STRUCT
+maxInput db count
+inputCount db ? 
+new_date db count DUP(?)
+
+set_success db "Date is set successfully $"
+
+.code
+
+;set DS to the location of the data segment
+mov ax, @data
+mov ds, ax    
+
+;--------- This part displays system date ---------------
+
+; Function 2Ah gets the system date
+mov ah, 2ah
+int 21h
+mov year, cx
+mov month, dh
+mov day, dl
+mov day_of_week, al 
+
+; Function 2Ch gets the system time  
+mov ah, 2ch
+int 21h
+mov hours, ch
+mov minutes, cl
+mov seconds, dh
+         
+; Function 9h prints $-terminated string         
+mov ah, 9
+mov dx, offset date_message
+int 21h   
+
+; Transform hexadecimal YEAR to char 
+;YEAR contains 4 digits, it is easier to save chars in stack
+mov ax, year
+mov dx, 0; dividend is DX:AX
+mov bx, 0ah 
+mov cx, 3
+L1:
+div bx    
+or dl, 30h; remainder is in DX, quotient is in AX 
+push dx; save reminder in stack
+mov dx, 0 
+loop L1
+or al, 30h; last remainder is in AX
+push ax
+
+; Write YEAR string to console 
+mov cx, 4
+L2:
+mov ah, 6
+pop dx
+int 21h 
+loop L2
+
+;Write ":"
+mov ah, 6
+mov dl, ":"
+int 21h   
+
+;Transform hexadecimal MONTH to char
+mov ax, 0
+mov al, month
+mov bl, 0ah
+div bl
+or ah, 30h; reminder
+mov bh, ah
+or al, 30h; quotient
+mov bl, al 
+
+;Write DAY to console
+mov ah, 6
+mov dl, bl
+int 21h
+mov ah, 6
+mov dl, bh
+int 21h
+
+;Write ":"
+mov ah, 6
+mov dl, ":"
+int 21h 
+
+; Transform hexadecimal DAY to char
+mov ax, 0
+mov al, day
+mov bl, 0ah
+div bl
+or ah, 30h; reminder
+mov bh, ah
+or al, 30h; quotient
+mov bl, al
+
+; Write DAY string to console
+mov ah, 6
+mov dl, bl
+int 21h
+mov ah, 6
+mov dl, bh
+int 21h   
+
+;crlf
+mov ah, 6
+mov dl, 0dh
+int 21h
+mov ah, 6
+mov dl, 0ah
+int 21h 
+
+;---------- This part sets system date ------------- 
+;(only YEAR is set, because code is quite lengthy)
+
+mov ah, 9
+mov dx, offset new_date_msg
+int 21h  
+
+;crlf
+mov ah, 6
+mov dl, 0dh
+int 21h
+mov ah, 6
+mov dl, 0ah
+int 21h 
+
+;Read an array of chars from keyboard followed by ENTER
+mov ah, 0ah
+mov dx, offset maxInput; offset KEYBOARD STRUCT
+int 21h  
+         
+;transform YEAR string to hexadecimal
+;Algorithm: each ASCII-digit is moved consequently to AL.
+; Opeartion AND 0fh will transform ASCII to hex digit.
+; Hex digit will be multiplied by 1000, next one by 100, etc.
+;All the multiplied values will be summed in DI. 
+mov ax, 0
+mov si, offset new_date 
+mov cx, 4 
+mov bx, 1000d; first multiplier (its value will be divided by 10 each round)
+mov di, 0; sum
+L5:
+mov al, [si]
+and al, 0fh; transform char to hex digit
+mul bx; multiply by 1000 (100, 10, 1)
+add di, ax
+inc si
+mov ax, bx; here multiplier is divided by 10
+mov bx, 10d
+div bx
+mov bx, ax
+loop L5  
+mov year, di  
+
+;Set system date
+mov ah, 2Bh
+mov cx, year
+int 21h
+
+; If change was successful, AL=0
+cmp al, 0
+jne fail
+
+; Display SUCCESS message
+mov ah, 9
+mov dx, offset set_success
+int 21h  
+
+fail:
+
+mov ah, 4ch
+int 21h

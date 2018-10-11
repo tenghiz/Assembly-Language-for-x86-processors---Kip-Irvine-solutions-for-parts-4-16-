@@ -1,0 +1,95 @@
+;15.7 - 4 - Get file attributes
+
+; This program works well under XP (use masm32 package to link and assemble).
+
+; Being assembled and linked in FreeDOS environment (package masm611 was used), this program
+; either exits without showing any information (when CX=0), or shows all attributes at once (CX is not set).
+
+.model small
+.stack 100h
+.386
+
+attributes_msg struc
+normal db "NORMAL",0, 0, 0, 0
+read_only db "READ ONLY", 0
+hidden db "HIDDEN", 0, 0, 0, 0
+system db "SYSTEM", 0, 0, 0, 0
+archive db "ARCHIVE", 0, 0 ,0
+attributes_msg ends
+
+buffer = 40
+
+.data
+
+attributes dw 0, 1, 2, 4, 20h
+attr_msg attributes_msg <>
+attr dw 0
+
+file_name db buffer dup(0)
+
+file_name_msg db "Please enter file name: $"
+crlf db 0dh, 0ah, "$"
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+;file_name_msg
+mov ah, 9
+mov dx, offset file_name_msg
+int 21h
+
+;get file name
+mov si, offset file_name
+L1:
+mov ah, 1
+int 21h
+cmp al, 0dh
+je L2
+mov byte ptr [si], al
+inc si
+jmp L1
+L2:
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;get file attributes
+mov cx, 0; this option is not necessary
+mov ax, 7143h
+mov bx, 0; get attributes
+mov dx, offset file_name
+int 21h
+mov attr, cx
+mov si, offset attributes
+mov di, offset attr_msg
+mov ecx, lengthof attributes
+L3:
+push ecx
+mov ax, [si]
+mov bx, attr
+test bx, ax
+jz L4
+mov ah, 40h
+mov bx, 1
+mov cx, 0ah
+mov dx, di
+int 21h
+mov ah, 9
+mov dx, offset crlf
+int 21h
+L4:
+add si, 2
+add di, 0ah
+pop ecx
+loop L3
+
+mov ah, 4ch
+int 21h
+
+main endp
+end main

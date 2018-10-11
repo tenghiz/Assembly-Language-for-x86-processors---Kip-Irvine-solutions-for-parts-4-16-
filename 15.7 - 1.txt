@@ -1,0 +1,94 @@
+;15.7 - 1 - Set drive
+
+; This program was assembled and linked using MASM611 package \bin\ml and \binr\link.
+;This program was run using FreeDOS bootable USB
+
+;COMMENTS
+;Function 0Eh (set drive) has no error code, so user should check first current drive
+;using function 19h, then try to set drive (0Eh) and then call 19h once again to check the result.
+
+.model small
+.stack 100h
+.386
+
+.data
+
+prompt1 db "Please select drive A:\ (type a), B:\(type b) or C:\(type c) $"
+crlf db 0dh, 0ah, "$"
+drive_code db ?; 0-A, 1-B, 3-C
+prompt_drive db "Current drive is $"
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+;get current drive (al 0-A, 1-B, 3-C)
+mov ah, 19h
+int 21h
+mov drive_code, al
+
+; Write $-terminated string
+mov ah, 9
+mov dx, offset prompt_drive
+int 21h
+
+;write char
+mov ah, 2
+mov dl, drive_code
+add dl, 41h; ASCII 'A'
+int 21h
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+; Write $-terminated string
+mov ah, 9
+mov dx, offset prompt1
+int 21h
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;read char (a 61h, b 62h, c 63h)
+mov ah, 1
+int 21h
+sub al, 61h;
+mov drive_code, al
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;set drive
+mov ah, 0eh
+mov dl, drive_code
+int 21h
+
+;get current drive
+mov ah, 19h
+int 21h
+mov drive_code, al
+
+; Write $-terminated string
+mov ah, 9
+mov dx, offset prompt_drive
+int 21h
+
+;write char
+mov ah, 2
+mov dl, drive_code
+add dl, 41h; ASCII 'A'
+int 21h
+
+mov ah, 4ch
+int 21h
+
+main endp
+end main

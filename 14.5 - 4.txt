@@ -1,0 +1,47 @@
+;14.5 - 4 - Uppercase conversion          
+
+;This program performs uppercase conversiaon in real time.
+;Press ENTER to exit
+
+;This program is implemented using emu8086
+
+.model small
+.stack 100h 
+
+.data 
+
+charr db 0
+   
+.code
+main PROC
+mov ax,@data
+mov ds,ax
+
+L1:
+mov ah, 1
+int 21h 
+mov charr, al
+
+;move back to one column
+mov ah, 2
+mov dl, 08h
+int 21h
+
+mov ah, 2
+mov dl, charr
+and dl, 0dfh; transform to uppercase
+;or dl, 21h; transform uppercase to lowercase 
+int 21h 
+
+cmp al, 0dh
+je L2
+jmp L1
+
+L2:
+
+mov ah,4Ch 
+mov al,0 
+int 21h
+main ENDP
+
+END main

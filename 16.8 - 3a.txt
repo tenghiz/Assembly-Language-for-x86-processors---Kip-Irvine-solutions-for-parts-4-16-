@@ -1,0 +1,178 @@
+;16.8 - 3 - Matrix imitation
+
+;This program use current time to set color (loght-green or white)
+;and to set a number to write (0 or 1)
+
+.model small
+.stack 100h
+.386
+
+.data
+
+column db 0
+row db 0
+color db 0
+
+init_columns db 0
+init_vmode db 0
+init_page db 0
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+;get video mode
+mov ah, 0fh
+int 10h
+mov init_vmode, al
+mov init_columns, ah
+mov init_page, bh
+
+;hide cursor
+mov ah, 1
+mov ch, 100
+mov cl, 6
+int 10h
+
+;scroll window upwards
+mov ah, 6
+mov al, 24;whole screen
+mov cx, 0
+mov dh, 24
+mov dl, 79
+mov bh, 7
+int 10h
+
+L11:
+
+mov ecx, 15
+L1:
+push ecx
+
+;get current time and set color
+mov ah, 0
+int 1ah
+mov ax, dx
+mov dx, 0
+mov bx, 2
+div bx
+cmp dx, 0
+jne white
+mov color, 00001010b;light green
+jmp color_exit
+white:
+mov color, 00001111b;white
+color_exit:
+
+;get current time and set 0 or 1
+mov ah, 0
+int 1ah
+mov ax, dx
+mov dx, 0
+mov bx, 3
+div bx
+or dl, 30h
+cmp dl, 30h
+je L5
+cmp dl, 31h
+je L5
+mov dl, ' '
+L5:
+mov al, dl
+;write char and attribute
+mov ah, 9
+mov bh, 0
+mov bl, color
+mov cx, 1
+int 10h
+
+;set cursor position
+mov ah, 2
+mov dl, column
+mov dh, row
+mov bh, 0
+int 10h
+
+mov al, column
+add al, 5
+mov column, al
+
+call wait_millisec
+
+pop ecx
+loop L1
+
+mov al, row
+cmp al, 20
+jb L21
+;scroll one line
+mov ah, 6
+mov al, 1; 1 line
+mov cx, 0
+mov dh, 24
+mov dl, 79
+mov bh, 7
+int 10h
+jmp L22
+
+L21:
+inc row
+
+L22:
+mov column, 0
+
+call wait_one_sec
+
+;checks keyboard buffer, exit if ESC
+mov ax, 0
+mov ah, 11h
+int 16h
+cmp al, 1bh; ESC pressed?
+je quit
+
+jmp L11
+
+quit:
+
+;restore video mode
+mov ah, 0
+mov al, init_vmode
+int 10h
+
+;set initial color
+mov ah, 9
+mov al, ' '
+mov bh, 0
+mov bl, 00000111b
+mov cx, 1
+int 10h
+
+;restore cursor
+mov ah,1
+mov cx, 0607h
+int 10h
+
+mov ah, 4ch
+int 21h
+
+main endp
+
+wait_one_sec proc
+mov ah, 86h
+mov dx, 0d090h; low word
+mov cx, 3h;upper word
+int 15h
+ret
+wait_one_sec endp
+
+wait_millisec proc
+mov ah, 86h
+mov dx, 7d0h; low word
+mov cx, 0;upper word
+int 15h
+ret
+wait_millisec endp
+
+end main

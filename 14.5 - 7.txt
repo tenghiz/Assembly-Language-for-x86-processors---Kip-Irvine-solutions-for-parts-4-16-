@@ -1,0 +1,225 @@
+;14.5 - 7 - File encryption
+
+;This program prompts user to enter the name of existing text file, 
+;the name of output file (to be created) and some value between 1 and 255
+;which will be used to XOR-encrypt content of input file.
+
+;this program doesn't require to use "Move file pointer" function.
+
+;File decryption: just call back the program and set previous output file as input file.
+;Use the same XOR-value
+
+.model small
+.stack 100h
+
+buffer = 128
+
+.data
+
+file_name_msg db "Please enter input file's name: $"
+
+file_name db buffer dup(0)
+handle dw 0
+
+input_buffer db buffer dup(0)
+bytes_read dw 0
+
+file_out_msg db "Please enter output file's name: $"
+
+file_output_name db buffer dup(0)
+handle_out dw 0
+
+xor_value_msg db "Please enter any number between 001 and 255. Number format is XXX: $"
+xor_value db 3 dup(0)
+xor_value_hex db 0
+
+crlf db 0dh, 0ah, "$"
+
+failed_msg db "ERROR!$"
+exit_msg db "==END==$"
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;file_name_msg
+mov ah, 9
+mov dx, offset file_name_msg
+int 21h
+
+;read file's name
+;press ENTER to save file's name
+mov si, offset file_name
+L1:
+mov ah, 1
+int 21h
+cmp al, 0dh
+je L2
+mov byte ptr [si], al
+inc si
+jmp L1
+L2:
+
+;open file
+mov ax, 716ch
+mov bx, 0
+mov cx, 0
+mov dx, 1
+mov si, offset file_name
+int 21h
+jc failed
+mov handle, ax
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;xor_value_msg
+mov ah, 9
+mov dx, offset xor_value_msg
+int 21h
+
+;read xor_value 
+mov si, offset xor_value
+mov cx, 3
+L5:
+mov ah, 1
+int 21h
+mov byte ptr [si], al
+inc si
+loop L5
+
+;transform dec to hex
+mov si, offset xor_value
+mov ax, 0
+mov al, byte ptr [si]
+and al, 0fh
+mov bl, 100d
+mul bl
+mov xor_value_hex, al
+inc si
+mov ax, 0
+mov al, byte ptr [si]
+and al, 0fh
+mov bl, 10d
+mul bl
+add xor_value_hex, al
+inc si
+mov al, byte ptr [si]
+add xor_value_hex, al
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;file_out_msg
+mov ah, 9
+mov dx, offset file_out_msg
+int 21h
+
+;read output file's name
+;press ENTER to save file's name
+mov si, offset file_output_name
+L3:
+mov ah, 1
+int 21h
+cmp al, 0dh
+je L4
+mov byte ptr [si], al
+inc si
+jmp L3
+L4:
+
+;create output file
+mov ax, 716ch
+mov bx, 2
+mov cx, 0
+mov dx, 10h
+mov si, offset file_output_name
+int 21h
+jc failed
+mov handle_out, ax
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+L0:
+
+;read string from file to buffer
+mov ah, 3fh
+mov bx, handle
+mov cx, buffer
+mov dx, offset input_buffer
+int 21h
+mov bytes_read, ax
+
+;encrypt string
+mov si, offset input_buffer
+mov cx, bytes_read
+L01:
+mov al, byte ptr [si]
+xor al, xor_value_hex
+mov byte ptr [si], al
+inc si
+loop L01
+
+;write encrypted string to output file
+mov ah, 40h
+mov bx, handle_out
+mov cx, bytes_read 
+mov dx, offset input_buffer
+int 21h
+
+mov ax, buffer
+mov bx, bytes_read
+cmp ax, bx
+jne exit
+
+jmp L0
+
+jmp exit
+
+failed:
+
+;failed_msg
+mov ah, 9
+mov dx, offset failed_msg
+int 21h
+
+jmp exit1
+
+exit:
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;exit_msg
+mov ah, 9
+mov dx, offset exit_msg
+int 21h
+
+exit1:
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+mov ah, 4ch
+int 21h
+
+main endp
+end main

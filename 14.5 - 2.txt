@@ -1,0 +1,154 @@
+; 14.5 - 2 - Copy a text file
+
+;This program opens some file containing text and uses loop
+;to copy a content of file to console and to another blank file.
+; Function int21 42h is used to move file pointer.
+
+; This program was run under WinXP using masm32 link16.exe program
+
+.model small
+.stack 100h
+
+BufSize = 256
+
+.data
+
+infile db "infile.txt", 0
+outfile db "outfile.txt", 0
+
+inHandle dw 0
+outHandle dw 0
+
+buffer db BufSize dup(0)
+bytesRead dw 0
+
+filePointerHigh dw 0
+filePointerLow dw 0
+
+errorMsg db "Error!$"
+exitMsg db 0dh, 0ah, "==END OF FILE==$"
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+;open input file
+mov ax, 716ch
+mov bx, 0; read only
+mov cx, 0; normal attribute
+mov dx, 1; open file
+mov si, offset infile
+int 21h
+jc quit; quit if error
+mov inHandle, ax
+
+;create the output file
+mov ax, 716ch
+mov bx, 2; write only
+mov cx, 0; normal attribute
+mov dx, 10h; create
+mov si, offset outfile
+int 21h
+jc quit; quit if error
+mov outHandle, ax
+
+L1:
+
+;read input file
+mov ah, 3fh
+mov bx, inHandle
+mov cx, BufSize
+mov dx, offset buffer
+int 21h
+jc quit; quit if error
+mov bytesRead, ax
+
+;move file pointer
+mov ah, 42h
+mov al, 0; offset from beginning
+mov bx,inHandle
+mov cx, filePointerHigh
+mov dx, filePointerLow
+int 21h  
+
+;display the buffer
+mov ah, 40h
+mov bx, 1; console output handle
+mov cx, bytesRead
+mov dx, offset buffer
+int 21h
+jc quit
+
+; close the file
+;mov ah, 3eh
+;mov bx, inHandle
+;int 21h
+;jc quit
+
+;write buffer to new file
+mov ah, 40h
+mov bx, outHandle
+mov cx, bytesRead
+mov dx, offset buffer
+int 21h
+jc quit
+
+;move file pointer
+mov ah, 42h
+mov al, 0; offset from beginning
+mov bx,outHandle
+mov cx, filePointerHigh
+mov dx, filePointerLow
+int 21h
+
+; increase the value of file pointer
+mov ax, filePointerLow
+cmp ax, 0ffffh
+je L2
+add ax, bytesRead
+mov filePointerLow, ax
+jmp L3
+L2:
+mov ax, filePointerHigh
+add ax, bytesRead
+mov filePointerHigh, ax
+L3:
+
+;if bytesRead is less then BufSize, exit the loop
+mov ax, BufSize
+mov bx, bytesRead
+cmp ax, bx
+ja exit
+
+jmp L1
+
+; close the file
+mov ah, 3eh
+mov bx, inHandle
+int 21h
+jc quit
+
+;close the file
+mov ah, 3eh
+mov bx, outHandle
+int 21h
+
+quit:
+
+mov ah, 9
+mov dx, offset errorMsg
+int 21h
+
+exit:
+
+mov ah, 9
+mov dx, offset exitMsg
+int 21h
+
+mov ah, 4ch
+int 21h
+
+main endp
+end main

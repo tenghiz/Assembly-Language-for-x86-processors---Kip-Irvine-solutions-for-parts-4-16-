@@ -1,0 +1,145 @@
+;15.7 - 2 - Get amount of data space
+
+; This program was assembled and linked using MASM611 package.
+; Launch on FreeDOS bootable USB: perfect!
+
+.model small
+.stack 100h
+.386
+
+ExtGetDskFreSpcStruc STRUC
+StructSize WORD ?
+Level WORD ?
+SectorsPerCluster DWORD ?
+BytesPerSector DWORD ?
+AvailableClusters DWORD ?
+TotalClusters DWORD ?
+AvailablePhysSectors DWORD ?
+TotalPhysSectors DWORD ?
+AvailableAllocationUnits DWORD ?
+TotalAllocationUnits DWORD ?
+Rsvd DWORD 2 DUP (?)
+ExtGetDskFreSpcStruc ENDS
+
+.data
+
+egdfss ExtGetDskFreSpcStruc <>
+drive_name db "C:\", 0
+
+error_msg db "ERROR!$"
+volum_size_msg db "Volume size in kb $"
+crlf db 0dh, 0ah, "$"
+volum_size dword 0
+occupied_volum db "Occupied volume in kb $"
+free_space dword 0
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+mov es, ax
+
+;get disk free space
+mov egdfss.Level, 0; must be 0
+mov di, offset egdfss
+mov cx, sizeof egdfss
+mov dx, offset drive_name
+mov ax, 7303h
+int 21h
+jc error
+
+;Calculate and return the disk volume size, in kilobytes.
+;SectorsPerCluster * 512(size of sector) * TotalClusters) / 1024
+mov edx, 0
+mov eax,egdfss.SectorsPerCluster
+shl eax,9 ; mult by 512
+mul egdfss.TotalClusters
+mov ebx,1024
+div ebx ; return kilobytes
+mov volum_size, eax
+
+;volum_size_msg
+mov ah, 9
+mov dx, offset volum_size_msg
+int 21h
+
+;transform hex to dec
+mov edx, 0
+mov eax, volum_size
+mov ebx, 0ah
+mov ecx, 8
+L1:
+div ebx
+push edx
+mov edx, 0
+loop L1
+
+;write dec
+mov ecx, 8
+L2:
+mov ah, 2
+pop edx
+or dl, 30h
+int 21h
+loop L2
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;occupied_volum
+mov ah, 9
+mov dx, offset occupied_volum
+int 21h
+
+;Calculate and return the disk free space, in kilobytes.
+;SectorsPerCluster * 512(size of sector) * TotalClusters) / 1024
+mov edx, 0
+mov eax,egdfss.SectorsPerCluster
+shl eax,9 ; mult by 512
+mul egdfss.AvailableClusters
+mov ebx,1024
+div ebx ; return kilobytes
+mov free_space, eax
+
+;occupied space = total size - free space
+mov eax, volum_size
+sub eax, free_space
+
+;transform hex to dec
+mov edx, 0
+mov ebx, 0ah
+mov ecx, 8
+L3:
+div ebx
+push edx
+mov edx, 0
+loop L3
+
+;write dec
+mov ecx, 8
+L4:
+mov ah, 2
+pop edx
+or dl, 30h
+int 21h
+loop L4
+
+jmp quit
+
+error:
+
+; Write error_msg
+mov ah, 9
+mov dx, offset error_msg
+int 21h
+
+quit:
+
+mov ah, 4ch
+int 21h
+
+main endp
+end main

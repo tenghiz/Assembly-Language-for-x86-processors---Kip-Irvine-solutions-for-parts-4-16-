@@ -1,0 +1,180 @@
+;16.8 - 9 - Drawing box 
+
+.model small
+.stack 100h
+.386
+
+frame struct
+top db 5
+left db 30
+bottom db 20
+right db 70
+frame ends
+
+.data
+
+vmode db 0
+fr frame <>
+
+row db 0
+column db 0
+
+color db 3ch
+
+background db 176d, 0
+box_corners db 0C9h, 0bbh, 0c8h, 0bch; left up/right up/left down/right down
+box_lines db 0cdh, 0bah; horizont, vertic
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+;get current video mode
+mov ah, 0fh
+int 10h
+mov vmode, al
+
+;set video mode
+mov ah, 0
+mov al, 3; color text, 80x25
+int 10h
+
+;get cursor information and hide cursor
+mov ah, 3
+int 10h
+or ch, 30h;set CH to illegal value
+mov ah, 1
+int 10h
+
+;set background color
+mov edi, offset background
+mov ax, 80
+mov bx, 25
+mul bx
+mov cx, ax
+L0:
+push cx
+;set cursor position
+mov ah, 2
+mov dl, column
+cmp dl, 79
+jbe L1
+inc row
+mov column, 0
+L1:
+mov dh, row
+call draw_corners
+inc column
+pop cx
+loop L0
+
+;write box
+
+;draw corners
+mov dl, fr.left
+mov dh, fr.top
+mov edi, offset box_corners
+call draw_corners
+mov dl, fr.right
+inc edi
+call draw_corners
+mov dl, fr.left
+mov dh, fr.bottom
+inc edi
+call draw_corners
+mov dl, fr.right
+inc edi
+call draw_corners
+
+;draw horizontal line
+mov dl, fr.right
+sub dl, fr.left
+movzx esi, dl
+dec esi
+mov ecx, esi
+mov edi, offset box_lines
+mov dh, fr.top
+mov dl, fr.left
+inc dl
+upper_side:
+push ecx
+call draw_corners
+inc dl
+pop ecx
+loop upper_side
+mov ecx, esi
+mov dh, fr.bottom
+mov dl, fr.left
+inc dl
+lower_side:
+push ecx
+call draw_corners
+inc dl
+pop ecx
+loop lower_side
+
+;draw vertical line
+mov dh, fr.bottom
+sub dh, fr.top
+movzx esi, dh
+dec esi
+mov ecx, esi
+mov edi, offset box_lines
+inc edi
+mov dh, fr.top
+inc dh
+mov dl, fr.left
+left_side:
+push ecx
+call draw_corners
+inc dh
+pop ecx
+loop left_side
+mov ecx, esi
+mov dh, fr.top
+inc dh
+mov dl, fr.right
+right_side:
+push ecx
+call draw_corners
+inc dh
+pop ecx
+loop right_side
+
+;wait for a key
+mov ah,10h 
+int 16h
+
+;show cursor
+mov ah, 3
+int 10h
+mov ah, 1
+mov cx, 0607h
+int 10h
+
+;restore video mode
+mov ah, 0
+mov al, vmode
+int 10h
+
+mov ah, 4ch
+int 21h
+
+main endp
+
+draw_corners proc
+mov ah, 2 
+mov bh, 0
+int 10h
+mov ah, 9
+mov al, byte ptr [edi]
+mov bh, 0
+mov bl, color
+mov cx, 1;repeat
+int 10h
+ret
+draw_corners endp
+
+end main

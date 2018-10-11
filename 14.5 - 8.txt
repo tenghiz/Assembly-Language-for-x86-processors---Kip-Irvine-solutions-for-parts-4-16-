@@ -1,0 +1,180 @@
+;14.5 - 8 - word count
+
+;This is a simple word counter, which counts only TAB, ENTER and SPACE.
+;Double spaces, absence of spaces, empty lines are not recognized by this program.
+
+.model small
+.stack 100
+
+buffer = 128
+
+.data
+
+file_name_msg db "Please enter input file's name: $"
+
+file_name db buffer dup(0)
+handle dw 0
+
+input_buffer db buffer dup(0)
+bytes_read dw 0
+
+;counter starts from 1 to adjust the absence of SPACE after last word
+counter dw 1
+
+crlf db 0dh, 0ah, "$"
+
+word_count_msg db "Word count: $"
+
+failed_msg db "ERROR!$"
+exit_msg db "==END==$"
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;file_name_msg
+mov ah, 9
+mov dx, offset file_name_msg
+int 21h
+
+;read file's name
+;press ENTER to save file's name
+mov si, offset file_name
+L1:
+mov ah, 1
+int 21h
+cmp al, 0dh
+je L2
+mov byte ptr [si], al
+inc si
+jmp L1
+L2:
+
+;open file
+mov ax, 716ch
+mov bx, 0
+mov cx, 0
+mov dx, 1
+mov si, offset file_name
+int 21h
+jc failed
+mov handle, ax
+
+L0:
+
+;read string from file to buffer
+mov ah, 3fh
+mov bx, handle
+mov cx, buffer
+mov dx, offset input_buffer
+int 21h
+mov bytes_read, ax
+
+;count words
+;counts TAB 09h, ENTER 0dh and SPACE 20h
+mov si, offset input_buffer
+mov cx, bytes_read
+L3:
+mov al, byte ptr [si]
+cmp al, 09h
+je L4
+cmp al, 0dh
+je L4
+cmp al, 20h
+jne L5
+L4:
+mov bx, counter
+inc bx
+mov counter, bx
+L5:
+inc si
+loop L3
+
+mov ax, buffer
+mov bx, bytes_read
+cmp ax, bx
+jne exit
+
+jmp L0
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+jmp exit
+
+failed:
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;failed_msg
+mov ah, 9
+mov dx, offset failed_msg
+int 21h
+
+jmp exit1
+
+exit:
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;word_count_msg
+mov ah, 9
+mov dx, offset word_count_msg	
+int 21h
+
+;count hex to char
+mov ax, counter
+mov bx, 0ah
+mov cx, 5
+L6:
+mov dx, 0
+div bx
+or dl, 30h
+push dx
+loop L6
+
+;write counter
+mov cx, 5
+L7:
+mov ah, 2
+pop dx
+int 21h
+loop L7
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+;exit_msg
+mov ah, 9
+mov dx, offset exit_msg
+int 21h
+
+exit1:
+
+;crlf
+mov ah, 9
+mov dx, offset crlf
+int 21h
+
+mov ah, 4ch
+int 21h
+
+main endp
+end main	

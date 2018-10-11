@@ -1,0 +1,179 @@
+;16.8 - 5 - Draw rectangle (sketch).
+
+;Here rectangle is drawn using upper corner and low corner coordinates.
+;This approach has a drawback, namely, if random function is used to fill coordinates structure,
+; following conditions must be respected: x.up<x.low, y.up<y.low.
+
+;Time function is used to fill structure, which holds rectangle coordinates.
+
+;Loop is used to imitate generation of different rectangles.
+
+.model small
+.stack 100h
+.386
+
+Mode_06 = 6 ; 640 X 200, 2 colors
+Mode_0D = 0Dh ; 320 X 200, 16 colors
+Mode_0E = 0Eh ; 640 X 200, 16 colors
+Mode_0F = 0Fh ; 640 X 350, 2 colors
+Mode_10 = 10h ; 640 X 350, 16 colors
+Mode_11 = 11h ; 640 X 480, 2 colors
+Mode_12 = 12h ; 640 X 480, 16 colors
+Mode_13 = 13h ; 320 X 200, 256 colors
+Mode_6A = 6Ah ; 800 X 600, 16 colors
+
+coordinates struct
+x_up dw 0
+y_up dw 0
+x_low dw 0
+y_low dw 0
+coordinates ends
+
+.data
+
+saveMode db 0
+color db 1h
+coor coordinates <>
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+; Save the current video mode.
+mov ah,0Fh
+int 10h
+mov saveMode, al
+
+; Switch to a graphics mode.
+mov ah,0 ; set video mode
+mov al,Mode_13
+int 10h
+
+start:
+
+mov coor.y_up,0
+mov coor.x_up,0
+mov coor.x_low,0
+sub coor.y_low,0
+
+mov esi, offset coor
+mov ecx, 4
+mov di, word ptr [esi]; DI is used to fill structure with set of increasing numbers
+L5:
+push ecx
+L6:
+;get current time
+mov ax, 0
+int 1ah
+mov dh, 0;extract time from lower word
+cmp dx, di
+jbe L6
+cmp dx, 200
+ja L6
+mov word ptr [esi], dx
+add esi, 2
+mov di, word ptr [esi-2]
+call wait_millisec
+pop ecx
+loop L5
+
+;write upper line
+mov dx,coor.y_up
+mov di, coor.x_up
+movzx ecx, coor.x_low
+sub cx, coor.x_up
+call write_horizontal_line
+
+;write lower line
+mov dx, coor.y_low
+mov di, coor.x_up
+movzx ecx, coor.x_low
+sub cx, coor.x_up
+call write_horizontal_line
+
+;write left line
+mov si, coor.x_up
+mov di, coor.y_up
+movzx ecx, coor.y_low
+sub cx, coor.y_up
+call write_vertical_line
+
+;write right line
+mov si,coor.x_low
+mov di, coor.y_up
+movzx ecx, coor.y_low
+sub cx, coor.y_up
+call write_vertical_line
+
+;call wait_min
+call wait_millisec
+
+;checks keyboard buffer, exit if ESC
+mov ax, 0
+mov ah, 11h
+int 16h
+cmp al, 1bh; ESC pressed?
+je quit
+
+jmp start
+
+quit:
+
+; Restore the starting video mode.
+mov ah,0 ; set video mode
+mov al,saveMode ; saved video mode
+int 10h
+
+mov ah, 4ch
+int 21h
+
+main endp
+
+write_horizontal_line proc
+L1:
+push ecx
+mov ah, 0ch
+mov al, color
+mov bh, 0
+mov cx, di
+int 10h
+inc di
+pop ecx
+loop L1
+ret
+write_horizontal_line endp
+
+write_vertical_line proc
+L2:
+push ecx
+mov ah, 0ch
+mov al, color
+mov bh, 0
+mov cx, si
+mov dx, di
+int 10h
+inc di
+pop ecx
+loop L2
+ret
+write_vertical_line endp
+
+wait_millisec proc
+mov ah, 86h
+mov dx, 100000d; low word
+mov cx, 0;upper word
+int 15h
+ret
+wait_millisec endp
+
+wait_min proc
+mov ah, 86h
+mov dx, 4240h; low word
+mov cx, 0fh;upper word
+int 15h
+ret
+wait_min endp
+
+end main

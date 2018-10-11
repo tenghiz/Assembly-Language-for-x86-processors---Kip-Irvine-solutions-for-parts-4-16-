@@ -1,0 +1,114 @@
+;16.8 - 2 - Matrix dialog
+
+;This program imitates a dialog of two person in chat-room;
+; After writing a string, window is scrolled up.
+
+; Finction AH 86h int 15h is used to implement time delay.
+
+.model small
+.stack 100h
+.386
+
+.data
+
+prompt1 db "BABY_BOY: $"
+prompt2 db "ASHTON: $"
+char db 21h
+
+.code
+main proc
+
+mov ax, @data
+mov ds, ax
+
+;scroll window upwards 3/4 of screen
+mov ah, 6
+mov al, 18; 3/4 of window
+mov cx, 0
+mov dh, 24
+mov dl, 79
+mov bh, 7
+int 10h
+
+mov ecx, 5
+L1:
+push ecx
+
+;set cursor position
+mov ah, 2
+mov dl, 0;column
+mov dh, 7;row 24-18+1
+mov bh, 0
+int 10h
+
+call wait_one_sec
+
+;write string
+mov ah, 9
+mov dx, offset prompt1
+int 21h
+
+call write_ascii 
+
+call scroll_two_lines_up
+
+;set cursor position
+mov ah, 2
+mov dl, 20;column
+mov dh, 7;row
+mov bh, 0
+int 10h
+
+call wait_one_sec
+
+;write string
+mov ah, 9
+mov dx, offset prompt2
+int 21h
+
+call write_ascii 
+
+call scroll_two_lines_up
+
+pop ecx
+loop L1
+
+call wait_one_sec
+
+mov ah, 4ch
+int 21h
+
+main endp
+
+scroll_two_lines_up proc
+mov ah, 6
+mov al, 2; 2 lines
+mov cx, 0
+mov dh, 24
+mov dl, 79
+mov bh, 7
+int 10h
+ret
+scroll_two_lines_up endp
+
+write_ascii proc
+mov ecx, 8
+start:
+;write char
+mov ah, 2
+mov dl, char
+int 21h
+inc char
+loop start
+ret
+write_ascii endp
+
+wait_one_sec proc
+mov ah, 86h
+mov dx, 4240h; low word
+mov cx, 0fh;upper word
+int 15h
+ret
+wait_one_sec endp
+
+end main
