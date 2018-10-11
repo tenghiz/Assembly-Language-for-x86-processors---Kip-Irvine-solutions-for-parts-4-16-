@@ -1,0 +1,36 @@
+; 10.7.2 - 6 - Write a macro named mGenRandom that generates a random integer
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mGenRandom macro n
+call Randomize
+mov eax, n
+call RandomRange
+call WriteDec
+endm
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mGenRandom 10
+call Crlf
+
+mov eax, 500
+call Delay
+
+mGenRandom 10
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

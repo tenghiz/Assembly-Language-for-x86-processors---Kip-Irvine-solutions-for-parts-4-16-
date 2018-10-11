@@ -1,0 +1,26 @@
+; 10.7.2 - 2 - Write a statement that retrieves the wHour field of a SYSTEMTIME structure
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+sysTime SYSTEMTIME <>
+
+.code
+main PROC
+
+INVOKE GetLocalTime, ADDR sysTime
+movzx eax, sysTime.wMinute
+call WriteDec
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

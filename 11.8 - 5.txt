@@ -1,0 +1,62 @@
+﻿; 11.8 - 5 - Box - drawing
+
+; This program uses characters from code page OEM 437.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+OutHandle handle 0
+
+CharWritten dword ?
+
+xyPos COORD <5, 5>
+
+buffer1 word 201d, 205d, 205d, 205d, 187d; ╔, ═ and ╗
+lengthofbuffer = $ - buffer1
+; lengthofbuffer dword $ - buffer1--------------don t use this expression, otherwise dword cell will be added to array.
+word 186d, 0, 0, 0, 186d; ║
+word 200d, 205d, 205d, 205d, 188d; ╚, ═ and ╝
+
+lengthofbuffer1 dword ?
+
+MyCrlf byte 0Dh, 0Ah
+MyCrlfWritten dword 0
+
+.code
+main PROC
+
+invoke GetStdHandle, STD_OUTPUT_HANDLE
+mov OutHandle, eax
+
+;this expression is used to adjust "lengthofbuffer" to dword parameter
+mov eax, lengthofbuffer
+mov lengthofbuffer1, eax
+
+mov esi, offset buffer1
+mov ecx, 3
+L1:
+push ecx
+INVOKE WriteConsoleOutputCharacter, OutHandle, esi, lengthofbuffer1, xyPos, addr CharWritten
+mov ax, xyPos.Y
+inc ax
+mov xyPos.Y, ax
+add esi, sizeof buffer1
+pop ecx
+loop L1
+
+invoke WriteConsole, OutHandle, addr MyCrlf, 2, addr MyCrlfWritten, NULL
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

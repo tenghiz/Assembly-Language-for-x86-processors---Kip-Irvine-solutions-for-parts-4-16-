@@ -1,0 +1,59 @@
+; 12.7 - 3 - Set Rounding Modes
+
+; • 00 binary: Round to nearest even(default).
+; • 01 binary : Round down toward negative infinity.
+; • 10 binary : Round up toward positive infinity.
+; • 11 binary : Round toward zero(truncate).
+
+; NB!Macro doesn t allow IFIDNI directive couple to ELSEIF directive(only IFIDNI - ELSE - ENDIF is allowed).
+; Macro doesn t allow immediate real number operand, only memory operand is allowed.
+
+include Irvine32.inc
+
+; .386
+; .model flat, stdcall
+;.stack 4096
+; ExitProcess PROTO, dwExitCode:DWORD
+
+mRound macro FloatNumber, RoundingMethod
+local ctrlWord
+local Xrounded
+.data
+ctrlWord word 0
+Xrounded dword 0
+.code
+finit
+fld FloatNumber
+call ShowFPUStack
+call Crlf
+fstcw ctrlWord
+if (RoundingMethod eq 0)
+mov ax, 0
+elseif (RoundingMethod eq 1)
+mov ax, 10000000000b
+elseif (RoundingMethod eq 10)
+mov ax, 100000000000b
+elseif (RoundingMethod eq 11)
+mov ax, 110000000000b
+endif
+or ctrlWord, ax
+fldcw ctrlWord
+fist Xrounded
+mov eax, Xrounded
+call WriteDec
+call Crlf
+call Crlf
+endm
+
+.data
+
+X real8 3.56
+
+.code
+main PROC
+
+mRound X, 10
+
+exit
+main ENDP
+END main

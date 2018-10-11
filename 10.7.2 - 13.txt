@@ -1,0 +1,44 @@
+; 10.7.2 - 13 - Write a short example that uses the IF, ELSE, and ENDIF directives
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mWriteChar macro Z
+IF(Z LT 'a') OR(Z GT 'z')
+EXITM
+else
+mov al, Z
+call WriteChar
+call Crlf
+ENDIF
+endm
+
+mWriteChar1 macro X
+local char1
+.data
+char1 byte '&X'
+.code
+mov al, char1
+call WriteChar
+call Crlf
+endm
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mWriteChar 'r'
+
+mWriteChar1 1
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

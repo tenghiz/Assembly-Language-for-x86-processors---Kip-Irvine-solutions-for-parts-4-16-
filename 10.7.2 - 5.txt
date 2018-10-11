@@ -1,0 +1,46 @@
+; 10.7.2 - 5 - Write a macro named mPrintChar that displays a single character on the screen
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+;This macro requires CHAR1 parameter should be placed in ' '
+mPrintChar macro char1, N
+local L1
+mov ecx, N
+L1:
+mov al, char1
+call WriteChar
+loop L1 
+endm
+
+; This macro doesn t require ' ' for CHAR1 parameter
+mPrintChar1 macro char1, N
+local L1
+mov ecx, N
+L1 :
+mov al, '&char1'
+call WriteChar
+loop L1
+endm
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mPrintChar '1', 20
+call Crlf
+
+mPrintChar1 a, 20
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

@@ -1,0 +1,32 @@
+; 10.8 - 4 - mMult32 Macro
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mMult32 Macro X, Y
+push ebx
+mov eax, X
+mov ebx, Y
+mul ebx
+pop ebx
+endm
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+product qword 0
+
+.code
+main PROC
+
+mMult32 12345678h, 44h
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

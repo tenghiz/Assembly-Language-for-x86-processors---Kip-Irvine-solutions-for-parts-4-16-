@@ -1,0 +1,149 @@
+; 10.8 - 8 - Drunkard’s Walk with Probabilities
+
+; Sensu stricto this program doesn t satisfy conditions of excersise as it is written in the book:
+; "Modify the program so there is a 50 % probability the professor
+; will continue to walk in the same direction as he or she did when taking the previous step".
+; It means that first step must be completely aleatory and all following steps should be calculated using
+; first step as starting point.
+
+; This program proposes following solution : direction of the movement will be coded by 4 arrays, which contain
+; probability ranges for all possible directions.Direction of the movement will chosen at the beginning of
+; program using RandomRange.Later chosen array s probability ranges will be used by program to generate the path of professor.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+WalkMax = 30
+StartX = 15
+StartY = 15
+
+DrunkardWalk STRUCT
+path COORD WalkMax DUP(<0, 0>)
+pathsUsed WORD 0
+DrunkardWalk ENDS
+
+DisplayPosition PROTO currX : WORD, currY : WORD
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+aWalk DrunkardWalk <>
+
+; Predefined probability ranges.
+; RandomRange will choose one of rows and load it to array2
+
+array1 dword 0, 4, 5, 6, 7, 8, 10d
+sizeofarray1 = ($ - array1)
+dword 1, 5, 0, 6, 7, 8, 10d
+dword 5, 10d, 4, 0, 1, 2, 3
+dword 4, 8, 10d, 0, 1, 2, 3
+ 
+array2 dword 7 dup(0)
+
+.code
+main PROC
+
+call Randomize
+
+mov esi, offset array1
+mov eax, 4
+call RandomRange
+mov ebx, sizeofarray1
+mul ebx
+add esi, eax
+
+mov ecx, lengthof array2
+mov edi, offset array2
+L1:
+mov eax, [esi]
+mov [edi], eax
+add esi, type array1
+add edi, type array2
+loop L1
+
+mov esi, OFFSET aWalk
+call TakeDrunkenWalk
+
+; push cursor away from the path
+mov dh, 0
+mov dl, 0
+call Gotoxy
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+TakeDrunkenWalk PROC
+LOCAL currX : WORD, currY : WORD
+
+pushad
+mov edi, esi
+add edi, OFFSET DrunkardWalk.path
+mov ecx, WalkMax
+mov currX, StartX
+mov currY, StartY
+
+mov eax, WalkMax; this section defines the coordinates of the lost cellphone
+call RandomRange
+mov ebx, eax
+
+Again :
+
+mov ax, currX
+mov(COORD PTR[edi]).X, ax
+mov ax, currY
+mov(COORD PTR[edi]).Y, ax
+
+INVOKE DisplayPosition, currX, currY
+
+;Load direction probabilities from array2
+
+mov edx, offset array2
+
+mov eax, 11d
+call RandomRange
+.IF(eax >= [edx]) && (eax <= [edx+4])
+inc currY
+.ELSEIF eax == [edx + 8]
+dec currY
+.ELSEIF(eax >= [edx + 12]) && (eax <= [edx + 16])
+inc currX
+.ELSEIF(eax >= [edx + 20]) && (eax <= [edx + 24])
+dec currX
+.ENDIF
+
+add edi, TYPE COORD
+
+loop Again
+
+popad
+ret
+TakeDrunkenWalk ENDP
+
+DisplayPosition PROC currX : WORD, currY : WORD
+pushad
+
+mov dh, byte ptr currX
+mov dl, byte ptr currY
+call Gotoxy
+
+.IF ecx == WalkMax
+mov al, '@'; shows the starting point
+.ELSEIF ecx == ebx
+mov al, '&'; shows the place where the cellphone was lost
+.ELSEIF ecx == 1
+mov al, '#'; shows the final point
+.ELSE
+mov al, '*'; shows the path
+.ENDIF
+call WriteChar
+
+popad
+ret
+DisplayPosition ENDP
+
+END main

@@ -1,0 +1,59 @@
+; 12.7 - 4 - ((A + B) / C)*((D - A) + E)
+
+include Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+
+A real8 2.0
+B real8 2.0
+Cc real8 2.0
+D real8 2.0
+E real8 2.0
+F real8 0.0
+
+.code
+main PROC
+
+finit
+
+fld A
+call ShowFPUStack
+call Crlf
+fadd B
+call ShowFPUStack
+call Crlf
+fdiv Cc
+call ShowFPUStack
+call Crlf
+
+; here D is loaded to st(0), previously calculated expression shifted to st(1)
+
+fld D
+call ShowFPUStack
+call Crlf
+fsub A
+call ShowFPUStack
+call Crlf
+fadd E
+call ShowFPUStack
+call Crlf
+
+fmul; st(1) x st(0), product is stored in st(1), st(0) popped
+; fmul st(1), st(0); source multiplied by destination, result is stored in destination
+call ShowFPUStack
+call Crlf
+fst F
+
+finit
+fld F
+call ShowFPUStack
+call Crlf
+
+exit
+main ENDP
+END main

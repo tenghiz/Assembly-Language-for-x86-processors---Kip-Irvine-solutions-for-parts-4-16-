@@ -1,0 +1,45 @@
+; 12.7 - 5 - Area of a Circle
+
+include Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+
+radius real8 0.0
+area real8 0.0
+stdOutHandle dword 0
+prompt byte "Please enter the radius of a circle: ", 0
+promptWritten dword 0
+prompt1 byte "Cirle's area is ",0
+
+.code
+main PROC
+
+INVOKE GetStdHandle, STD_OUTPUT_HANDLE
+mov stdOutHandle, eax
+
+finit
+
+invoke WriteConsole, stdOutHandle, addr prompt, sizeof prompt, addr promptWritten, null
+call ReadFloat
+fst radius
+
+fmul radius
+fldpi
+fmul
+fst area
+
+call Crlf
+
+invoke WriteConsole, stdOutHandle, addr prompt1, sizeof prompt1, addr promptWritten, null
+call WriteFloat
+call Crlf
+call Crlf
+
+exit
+main ENDP
+END main

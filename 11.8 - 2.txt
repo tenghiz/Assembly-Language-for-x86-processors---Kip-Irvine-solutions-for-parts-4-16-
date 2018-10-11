@@ -1,0 +1,114 @@
+; 11.8 - 2 - String Input / Output
+
+;NB! Check how CRLF function is implemented!
+;Sequence 0dh, 0ah counts for 2 symbols! So the parameter nNumberOfCharsToRead=2
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+ReadConsole PROTO,
+hConsoleInput:HANDLE, ; input handle
+lpBuffer:PTR BYTE, ; pointer to buffer
+nNumberOfCharsToRead:DWORD, ; number of chars to read
+lpNumberOfCharsRead:PTR DWORD, ; ptr to num bytes read
+lpReserved:DWORD
+
+WriteConsole PROTO,
+hConsoleOutput:HANDLE,
+lpBuffer:PTR BYTE,
+nNumberOfCharsToWrite:DWORD,
+lpNumberOfCharsWritten:PTR DWORD,
+lpReserved:DWORD
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+outHandle handle ?
+inpHandle handle ?
+
+CarrRetLineFeed byte 0dh, 0ah, 0
+bytesWritten dword 0
+
+NameRequest byte "Please enter your name: ", 0
+NameRequestLeng dword $ - NameRequest
+NameRequestWritten dword 0
+
+NameLength = 20
+NameBuff byte NameLength dup(0)
+NameBuffRead dword 0
+NameBuffWritten dword 0
+
+SurnameRequest byte "Please enter your family name: ", 0
+SurnameRequestLeng dword $ - SurnameRequest
+SurnameRequestWritten dword 0
+
+SurnameLength = 20
+SurnameBuff byte SurnameLength dup(0)
+SurnameBuffRead dword 0
+SurnameBuffWritten dword 0
+
+PhoneRequest byte "Please enter your phone number: ", 0
+PhoneRequestLeng dword $ - PhoneRequest
+PhoneRequestWritten dword 0
+
+PhoneLength = 20
+PhoneBuff byte SurnameLength dup(0)
+PhoneBuffRead dword 0
+PhoneBuffWritten dword 0
+
+NameOutput byte "Name: ", 0
+NameOutputLeng dword $ - NameOutput
+NameOutputWritten dword 0
+
+SurnameOutput byte "Family name: ", 0
+SurnameOutputLeng dword $ - SurnameOutput
+SurnameOutputWritten dword 0
+
+PhoneOutput byte "Phone: ", 0
+PhoneOutputLeng dword $ - PhoneOutput
+PhoneOutputWritten dword 0
+
+.code
+main PROC
+
+invoke GetStdHandle, STD_OUTPUT_HANDLE
+mov outHandle, eax
+
+invoke GetStdHandle, STD_INPUT_HANDLE
+mov inpHandle, eax
+
+invoke WriteConsole, outHandle, addr NameRequest, NameRequestLeng, addr NameRequestWritten, NULL
+invoke ReadConsole, inpHandle, addr NameBuff, NameLength, addr NameBuffRead, NULL
+invoke WriteConsole, outHandle, addr CarrRetLineFeed, 2, addr bytesWritten, NULL
+
+invoke WriteConsole, outHandle, addr SurnameRequest, SurnameRequestLeng, addr SurnameRequestWritten, NULL
+invoke ReadConsole, inpHandle, addr SurnameBuff, SurnameLength, addr SurnameBuffRead, NULL
+invoke WriteConsole, outHandle, addr CarrRetLineFeed, 2, addr bytesWritten, NULL
+
+invoke WriteConsole, outHandle, addr PhoneRequest, PhoneRequestLeng, addr PhoneRequestWritten, NULL
+invoke ReadConsole, inpHandle, addr PhoneBuff, PhoneLength, addr PhoneBuffRead, NULL
+invoke WriteConsole, outHandle, addr CarrRetLineFeed, 2, addr bytesWritten, NULL
+
+invoke WriteConsole, outHandle, addr NameOutput, NameOutputLeng, addr NameOutputWritten, NULL
+invoke WriteConsole, outHandle, addr NameBuff, NameBuffRead, addr NameBuffWritten, NULL
+invoke WriteConsole, outHandle, addr CarrRetLineFeed, 2, addr bytesWritten, NULL
+
+invoke WriteConsole, outHandle, addr SurnameOutput, SurnameOutputLeng, addr SurnameOutputWritten, NULL
+invoke WriteConsole, outHandle, addr SurnameBuff, SurnameBuffRead, addr SurnameBuffWritten, NULL
+invoke WriteConsole, outHandle, addr CarrRetLineFeed, 2, addr bytesWritten, NULL
+
+invoke WriteConsole, outHandle, addr PhoneOutput, PhoneOutputLeng, addr PhoneOutputWritten, NULL
+invoke WriteConsole, outHandle, addr PhoneBuff, PhoneBuffRead, addr PhoneBuffWritten, NULL
+invoke WriteConsole, outHandle, addr CarrRetLineFeed, 2, addr bytesWritten, NULL
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

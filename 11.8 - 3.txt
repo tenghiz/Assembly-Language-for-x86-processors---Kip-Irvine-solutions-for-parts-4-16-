@@ -1,0 +1,110 @@
+; 11.8 - 3 - Clearing the screen
+
+; This program consists of 2 parts.
+; The first one prints some arbitrary text.
+; The second one clears the screen.
+
+;The principle of the program:
+; after text is printed, GetConsoleScreenBufferInfo is called.This function fills CONSOLE_SCREEN_BUFFER_INFO structure.
+; dwCursorPosition.Y indicates the position of the cursor on Y - axis(simply speaking number of printed lines).
+; srWindow.Right retrieves the width of console window(or number of characters printed on 1 line).
+; So, number of digits in printed text can be calculated multiplying dwCursorPosition.Y by srWindow.Right.
+; To clear the screen, SetConsoleCursorPosition function is called in order to set the cursor on upper left corner.
+; Then the number of digits is passed to loop, which prints corresponding number of "spaces".
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+WriteConsole PROTO,
+hConsoleOutput:HANDLE,
+lpBuffer:PTR BYTE,
+nNumberOfCharsToWrite:DWORD,
+lpNumberOfCharsWritten:PTR DWORD,
+lpReserved:DWORD
+
+GetConsoleScreenBufferInfo PROTO,
+hConsoleOutput:HANDLE,
+lpConsoleScreenBufferInfo:PTR CONSOLE_SCREEN_BUFFER_INFO
+
+comment @
+CONSOLE_SCREEN_BUFFER_INFO STRUCT
+dwSize COORD <>
+dwCursorPosition COORD <>
+wAttributes WORD ?
+srWindow SMALL_RECT <>
+dwMaximumWindowSize COORD <>
+CONSOLE_SCREEN_BUFFER_INFO ENDS
+@
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+outHandle handle ?
+
+CarrRetLineFeed byte 0dh, 0ah, 0
+bytesWritten dword 0
+
+NameRequest byte "This text will be erased", 0
+NameRequestLeng dword $ - NameRequest
+NameRequestWritten dword 0
+
+CursCoord COORD <0,0>
+
+csbi CONSOLE_SCREEN_BUFFER_INFO <>
+
+BufferArea word 0
+
+ClearScreen byte " ", 0
+ClearScreenLeng dword $- ClearScreen
+ClearScreenWritten dword 0
+
+.code
+main PROC
+
+invoke GetStdHandle, STD_OUTPUT_HANDLE
+mov outHandle, eax
+
+mov ecx, 20
+L1:
+push ecx
+invoke WriteConsole, outHandle, addr NameRequest, NameRequestLeng, addr NameRequestWritten, NULL
+invoke WriteConsole, outHandle, addr CarrRetLineFeed, 2, addr bytesWritten, NULL
+pop ecx
+loop L1
+
+invoke WriteConsole, outHandle, addr CarrRetLineFeed, 2, addr bytesWritten, NULL
+
+invoke Sleep, 3000
+
+invoke GetConsoleScreenBufferInfo, outHandle, addr csbi
+
+mov eax, 0
+mov ax, csbi.dwCursorPosition.Y
+mov ebx, 0
+mov bx, csbi.srWindow.Right
+mul bx
+mov BufferArea, ax
+
+invoke SetConsoleCursorPosition, outHandle, CursCoord
+
+mov ecx, 0
+mov cx, BufferArea
+L2:
+push ecx
+invoke WriteConsole, outHandle, addr ClearScreen, ClearScreenLeng, addr ClearScreenWritten, NULL
+pop ecx
+loop L2
+
+invoke SetConsoleCursorPosition, outHandle, CursCoord
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

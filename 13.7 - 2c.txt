@@ -1,0 +1,44 @@
+// 13.7 - 2 - Longest Increasing Sequence
+// Only C++ code
+
+#include <iostream>
+
+int main()
+{
+	using namespace std;
+
+	const int length_array = 10;
+	int array1 [length_array] = { 14, 17, 26, 42,55, 10, 20,  22, 19, -5 };
+	int counter = 0; // counter for the longest sequence
+	int counter1 = 0; // counter for the current sequence
+	int index = 0; // index of the last member of the longest sequence
+	int index1 = 0; // current index
+	for (int i = 0; i < length_array; i++)
+	{
+		if (array1[i + 1] > array1[i])
+			counter1++;
+		else 
+			if (counter1 > counter)
+			{
+				counter = counter1;
+				counter1 = 0;
+				index = index1;
+			}
+		index1++;
+	}
+
+	cout << "Array is: ";
+	for (int i = 0; i < length_array; i++)
+		printf("%d ", array1[i]);
+	cout << endl;
+
+	cout << "Length of the longest increasing sequence is ";
+	printf("%d\n", counter + 1);
+
+	cout << "Sequence is: ";
+	index = index - counter;
+	for (int j = index; j<=index+counter;j++)
+		cout << array1[j] << " ";
+	cout << endl;
+	return 0;	
+}

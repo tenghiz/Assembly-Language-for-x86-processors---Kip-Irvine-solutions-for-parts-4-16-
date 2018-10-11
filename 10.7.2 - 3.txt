@@ -1,0 +1,51 @@
+; 10.7.2 - 3 - Using the following Triangle structure,
+; declare a structure variable and initialize its vertices
+; to(0, 0), (5, 0), and (7, 6)
+
+;IMPROVED
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+COORD STRUCT
+X WORD ? 
+Y WORD ? 
+COORD ENDS
+
+Triangle STRUCT
+Vertex1 COORD <>
+Vertex2 COORD <>
+Vertex3 COORD <>
+Triangle ENDS
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+angle Triangle <<0,0>, <5,0>, <7,6>>
+
+.code
+main PROC
+
+mov esi, offset angle
+mov ecx, 3
+L1:
+mov dh, byte ptr [esi]
+add esi, type word
+mov dl, byte ptr[esi]
+call Gotoxy
+mov al, '*'
+call WriteChar
+add esi, type word
+loop L1
+
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

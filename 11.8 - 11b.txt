@@ -1,0 +1,65 @@
+; 11.8 - 11 - Linked List(correct version)
+
+; Linked List is composed of nodes, first element of node contains some data, second element points to the next node.
+
+;This program works without structure initialization.
+
+INCLUDE Irvine32.inc
+
+node struct
+DataCell dword 0
+PointerCell dword 0
+node ends
+
+.data
+
+hHeap HANDLE ? ; heap handle
+pArray DWORD ?
+
+prompt1 byte "Please enter number: ", 0
+counter dword 0
+
+.code
+main PROC
+
+invoke GetProcessHeap
+mov hHeap, eax
+
+INVOKE HeapAlloc, hHeap, HEAP_ZERO_MEMORY, 1000
+mov pArray, eax
+
+mov esi, pArray
+L1:
+mov edx, offset prompt1
+call WriteString
+call ReadDec
+mov(node ptr[esi]).DataCell, eax
+cmp eax, 0
+je L2
+add esi, type node
+mov(node ptr[esi-type node]).PointerCell, esi; eax
+mov esi, (node ptr[esi - type node]).PointerCell
+mov eax, counter
+inc eax
+mov counter, eax
+jmp L1
+L2:
+call Crlf
+
+mov esi, pArray
+mov ecx, counter
+L3:
+mov eax, (node ptr[esi]).DataCell
+call WriteDec
+mov al, ':'
+call WriteChar
+mov eax, (node ptr[esi]).PointerCell
+call WriteHex
+mov esi, (node ptr[esi]).PointerCell
+call Crlf
+loop L3
+call Crlf
+
+exit
+main ENDP
+END main

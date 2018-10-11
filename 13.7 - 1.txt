@@ -1,0 +1,172 @@
+; 13.7 - 1 - Multiply an array by an Integer
+
+====================================== C++ 1st ==============================
+// This program multiplies elements of one array and places multiplied elements to another array.
+#include <iostream>
+
+int main()
+{
+	const int Z = 3;
+	using namespace std;
+	int array2[Z] = { 1,2,3 };
+	int array3[Z];
+	int multiplier = 3;
+	for (int i = 0; i<Z;i++)
+	{
+		array3[i] = array2[i] * multiplier;
+	}
+	for (int j = 0; j < Z; j++)
+		cout << array3[j] << "\t";
+	return 0;
+}
+
+=================================== C++ 2nd =================================
+//This program uses void function which multiplies all array elements by a multilplier 
+// and saves multiplies elements in source array
+
+#include <iostream>
+
+void mult_array(int * array0, int lengArray, int multiplier0)
+{
+	for (int i = 0; i < lengArray; i++)
+	{
+		array0[i] = multiplier0*array0[i];
+	}
+}
+
+int main()
+{
+	const int Z = 8;
+	using namespace std;
+	int array2[Z] = { 1,2,3, 0, 9 };
+	int multiplier = 3;
+	mult_array(array2, Z, multiplier);
+	for (int j = 0; j < Z; j++)
+		cout << array2[j] << "\t";
+	return 0;
+}
+
+=============================== Inline ASM 1st ================================
+// Here multiplication is substituted by a simple addition
+
+#include <iostream>
+
+void mult_array(int * array0, int lengArray, int multiplier0)
+{
+	__asm 
+	{
+		mov esi, array0
+		mov ecx, lengArray
+		L1:
+		push ecx
+		mov eax, [esi]
+		mov ebx, [esi]
+		mov ecx, multiplier0
+		dec ecx
+		L2:
+		add eax, ebx
+		loop L2
+		mov [esi], eax
+		add esi, 4; DON T USE "TYPE DWORD", OTHERWISE PROGRAM HAS A BUG!
+		pop ecx
+		loop L1
+	}
+}
+
+int main()
+{
+	const int Z = 8;
+	using namespace std;
+	int array2[Z] = { 21,2,3,4 };
+	int multiplier = 8;
+	mult_array(array2, Z, multiplier);
+	for (int j = 0; j < Z; j++)
+		cout << array2[j] << "\n";
+	return 0;
+}
+
+============================= Inline ASM 2nd ==========================
+// Normal multiplication
+
+#include <iostream>
+
+void mult_array(int * array0, int lengArray, int multiplier0)
+{
+	__asm 
+	{
+		mov esi, array0
+		mov ecx, lengArray
+		mov ebx, multiplier0
+		L1:
+		mov eax, [esi]
+		mul ebx
+		mov [esi], eax
+		add esi, 4; DON T USE "TYPE DWORD", OTHERWISE PROGRAM HAS A BUG!
+		loop L1
+	}
+}
+
+int main()
+{
+	const int Z = 8;
+	using namespace std;
+	int array2[Z] = { 21,2,3,4 };
+	int multiplier = 8;
+	mult_array(array2, Z, multiplier);
+	for (int j = 0; j < Z; j++)
+		cout << array2[j] << "\n";
+	return 0;
+}
+
+============================== Linking ASM code to C++ =================================
+
+=============C++ ================
+
+// Linking ASM code to C++
+
+#include <iostream>
+
+extern "C" void mult_array(int * array0, int lengArray, int multiplier0);
+
+int main()
+{
+	const int Z = 8;
+	using namespace std;
+	int array2[Z] = { 21,2,3,4 };
+	int multiplier = 8;
+	mult_array(array2, Z, multiplier);
+	for (int j = 0; j < Z; j++)
+		cout << array2[j] << "\n";
+	return 0;
+}
+
+============ASM ==================
+
+.586
+.MODEL flat, C
+
+mult_array proto,
+array0: ptr dword,
+lengArray: dword,
+multiplier0: dword
+
+.code
+
+mult_array proc,
+array0: ptr dword,
+lengArray: dword,
+multiplier0: dword
+
+mov esi, array0
+mov ecx, lengArray
+mov ebx, multiplier0
+L1 :
+mov eax, [esi]
+mul ebx
+mov[esi], eax
+add esi, 4; DON T USE "TYPE DWORD", OTHERWISE PROGRAM HAS A BUG!
+loop L1
+
+ret
+mult_array endp
+end

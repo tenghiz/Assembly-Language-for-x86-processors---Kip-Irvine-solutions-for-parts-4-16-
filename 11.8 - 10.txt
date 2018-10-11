@@ -1,0 +1,86 @@
+; 11.8 - 10 - Reading a Large File (version 1, flawy)
+
+; Reading a File(ReadFile.asm)
+; Opens, reads, and displays a text file using
+; procedures from Irvine32.lib.
+
+INCLUDE Irvine32.inc
+INCLUDE macros.inc
+BUFFER_SIZE = 500
+
+.data
+
+OutHandle handle 0
+InHandle handle 0
+
+MyCrlf byte 0dh, 0ah
+MyCrlfWritten dword 0
+
+buffer BYTE BUFFER_SIZE DUP(? )
+NumberOfBytesRead dword 0
+filename BYTE 80 DUP(0)
+fileHandle HANDLE ?
+
+ContinueMsg byte "Continue? y/n: ", 0
+ContinueMsgLength dword $ - ContinueMsg
+ContinueMsgWritten dword 0
+
+ynchar byte 0
+yncharRead dword 0
+
+.code
+main PROC
+
+; Let user input a filename.
+mWrite "Enter an input filename: "
+mov edx, OFFSET filename
+mov ecx, SIZEOF filename
+call ReadString
+
+; Open the file for input.
+mov edx, OFFSET filename
+call OpenInputFile
+mov fileHandle, eax
+
+; Check for errors.
+cmp eax, INVALID_HANDLE_VALUE; error opening file ?
+jne file_ok; no: skip
+mWrite <"Cannot open file", 0dh, 0ah>
+jmp quit; and quit
+file_ok :
+
+invoke GetStdHandle, STD_OUTPUT_HANDLE
+mov OutHandle, eax
+
+invoke GetStdHandle, STD_INPUT_HANDLE
+mov InHandle, eax
+
+L1:
+invoke ReadFile, fileHandle, addr buffer, BUFFER_SIZE, addr NumberOfBytesRead, NULL
+
+; Display the buffer.
+mWrite <"Buffer:", 0dh, 0ah, 0dh, 0ah>
+mov edx, OFFSET buffer; display the buffer
+call WriteString
+call Crlf
+
+invoke WriteConsole, OutHandle, addr MyCrlf, 2, addr MyCrlfWritten, NULL
+invoke WriteConsole, OutHandle, addr ContinueMsg, ContinueMsgLength, addr ContinueMsgWritten, NULL
+; invoke ReadConsole, InHandle, addr ynchar, 1, addr yncharRead, NULL; this procedure cannot be used directly,
+;because it generates an error after the 1st loop.
+
+call ReadChar
+mov ynchar, al
+mov eax, 0
+mov al, ynchar
+cmp eax, 79h
+je L1
+
+close_file :
+mov eax, fileHandle
+call CloseFile
+quit :
+
+exit
+main ENDP
+END main

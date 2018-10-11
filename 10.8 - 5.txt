@@ -1,0 +1,37 @@
+; 10.8 - 5 - mReadInt Macro
+
+; This macro reads some integer(X) and its type(eltType, word or dword),
+;and then saves the integer to corresponding memory operand.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mReadInt Macro Z, Xword, Ydword, eltType
+mov eax, Z
+IFIDNI <eltType>, <WORD>
+mov Xword, ax
+else
+mov Ydword, eax
+endif
+endm
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+argument1 word 0
+argument2 dword 0
+
+.code
+main PROC
+
+mReadInt 12345678h, argument1, argument2, dword
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

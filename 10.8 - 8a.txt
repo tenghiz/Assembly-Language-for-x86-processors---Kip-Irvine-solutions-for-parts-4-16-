@@ -1,0 +1,129 @@
+; 10.8 - 8 - Drunkard’s Walk with Probabilities(doesn't work)
+
+; COPIED FROM CHEGG STUDY
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+East = 0
+North = 1
+West = 2
+South = 3
+
+WalkMax = 30
+StartX = 15
+StartY = 15
+
+DrunkardWalk STRUCT
+path COORD WalkMax DUP(<0, 0>)
+pathsUsed WORD 0
+DrunkardWalk ENDS
+
+GetDirection proto
+
+DisplayPosition PROTO currX : WORD, currY : WORD
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+aWalk DrunkardWalk <>
+currDirection dword 0
+
+.code
+main PROC
+
+call Randomize
+mov esi, OFFSET aWalk
+call TakeDrunkenWalk
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+TakeDrunkenWalk PROC
+LOCAL currX : sword, currY : sword
+
+pushad
+mov edi, esi
+add edi, OFFSET DrunkardWalk.path
+mov ecx, WalkMax
+mov currX, StartX
+mov currY, StartY
+
+mov currDirection, North
+
+mov eax, WalkMax; this section defines the coordinates of the lost cellphone
+call RandomRange
+mov ebx, eax
+
+Again :
+
+mov ax, currX
+mov(COORD PTR[edi]).X, ax
+mov ax, currY
+mov(COORD PTR[edi]).Y, ax
+
+INVOKE DisplayPosition, currX, currY
+
+call GetDirection
+
+.if eax == North
+inc currY
+.elseif eax == South
+dec currY
+.elseif eax == West
+dec currX
+.else
+inc currX
+.endif
+
+add edi, TYPE COORD
+
+loop Again
+
+popad
+ret
+TakeDrunkenWalk ENDP
+
+DisplayPosition PROC currX : WORD, currY : WORD
+pushad
+.data
+commaStr BYTE ",", 0
+.code
+pushad
+movzx eax, currX
+call WriteDec
+mov edx, OFFSET commaStr
+call WriteString
+movzx eax, currY
+call WriteDec
+call Crlf
+popad
+ret
+DisplayPosition ENDP
+
+GetDirection proc uses edx ebx
+local modDivisor: dword
+mov modDivisor, 4
+mov eax, 10
+call RandomRange
+mov ebx, eax
+mov eax, currDirection
+.if ebx<6
+add eax, 2
+.elseif ebx < 8
+add eax, 1
+.else
+add eax, 3
+.endif
+mov edx, 4
+div modDivisor
+mov eax, edx
+ret
+GetDirection endp
+
+END main

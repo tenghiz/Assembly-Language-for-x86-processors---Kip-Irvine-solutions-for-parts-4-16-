@@ -1,0 +1,65 @@
+;13.7 - 3 - Summing Three Arrays
+
+;LINKING ASM CODE TO C++
+
+========================= C++ ===============================
+
+// 13.7 - 3 - Summing Three Arrays
+
+#include <iostream>
+
+extern "C" void Summing_Three_Arrays(int * array1, int * array2, int * array3, int array_length);
+
+int main()
+{
+	using namespace std;
+	const int array_length = 4;
+	int array1[array_length] = { 0,1,2,3 };
+	int array2[array_length] = { 1,2,3,4 };
+	int array3[array_length] = { 2,3,4,5 };
+
+	Summing_Three_Arrays(array1, array2, array3, array_length);
+
+	for (int i = 0; i < array_length; i++)
+		printf("%d ", array1[i]);
+
+	return 0;
+}
+
+========================== ASM =============================
+
+;13.7 - 3 - Summing Three Arrays
+
+.586
+.MODEL flat, C
+
+Summing_Three_Arrays proto,
+array1 : ptr dword,
+array2: ptr dword,
+array3: ptr dword,
+array_length : dword
+
+.code
+
+Summing_Three_Arrays proc,
+array1 : ptr dword,
+array2: ptr dword,
+array3: ptr dword,
+array_length : dword
+
+mov esi, array1
+mov edi, array2
+mov edx, array3
+mov ecx, array_length
+L1 :
+mov eax, [edi]
+add eax, [edx]
+add[esi], eax
+add esi, 4
+add edi, 4
+add edx, 4
+loop L1
+
+ret
+Summing_Three_Arrays endp
+end

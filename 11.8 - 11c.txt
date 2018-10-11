@@ -1,0 +1,67 @@
+; 11.8 - 11 - Linked List(correct version, 2nd modification)
+
+; Linked list is a linear collection of data elements,
+; in which linear order is not given by their physical placement in memory(sic!).
+
+; In this program HeapAlloc is called inside of the loop,
+; so nodes are not represented as a linear sequence of heap addresses.
+
+INCLUDE Irvine32.inc
+
+node struct
+DataCell dword 0
+PointerCell dword 0
+node ends
+
+.data
+
+hHeap HANDLE ? ; heap handle
+pArray DWORD ?
+
+prompt1 byte "Please enter number: ", 0
+counter dword 0
+
+.code
+main PROC
+
+invoke GetProcessHeap
+mov hHeap, eax
+
+INVOKE HeapAlloc, hHeap, HEAP_ZERO_MEMORY, sizeof node
+mov pArray, eax
+
+mov esi, pArray
+L1:
+mov edx, offset prompt1
+call WriteString
+call ReadDec
+mov(node ptr[esi]).DataCell, eax
+cmp eax, 0
+je L2
+INVOKE HeapAlloc, hHeap, HEAP_ZERO_MEMORY, sizeof node
+mov(node ptr[esi]).PointerCell, eax
+mov esi, (node ptr[esi]).PointerCell
+mov eax, counter
+inc eax
+mov counter, eax
+jmp L1
+L2:
+call Crlf
+
+mov esi, pArray
+mov ecx, counter
+L3:
+mov eax, (node ptr[esi]).DataCell
+call WriteDec
+mov al, ':'
+call WriteChar
+mov eax, (node ptr[esi]).PointerCell
+call WriteHex
+mov esi, (node ptr[esi]).PointerCell
+call Crlf
+loop L3
+call Crlf
+
+exit
+main ENDP
+END main

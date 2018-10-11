@@ -1,0 +1,78 @@
+; 10.8 - 2 - mWritestringAttr Macro (SKETCH)
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+; The WriteConsole function writes a string to the console window at the current cursor position
+; and leaves the cursor just past the last character written
+
+WriteConsole PROTO,
+hConsoleOutput:HANDLE, ; console output stream handle
+lpBuffer : PTR BYTE, ; pointer to string
+nNumberOfCharsToWrite : DWORD, ; string s length
+lpNumberOfCharsWritten : PTR DWORD,
+lpReserved : DWORD; not used, set to 0
+
+; The SetConsoleTextAttribute function lets you set the foreground and background colors for
+; all subsequent text output to the console window
+SetConsoleTextAttribute PROTO,
+hConsoleOutput:HANDLE, ; console output handle
+wAttributes : WORD; background and foreground color
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+prompt byte "Please input the desired color (from 01h to 0FEh): ", 0
+
+ColorAttribute word 0
+
+myString db "Here is my string", 0
+
+outHandle HANDLE 0
+
+bytesWritten DWORD ?
+
+.code
+main PROC
+
+INVOKE GetStdHandle, STD_OUTPUT_HANDLE
+mov outHandle, eax
+
+; Write a prompt to the console :
+INVOKE WriteConsole,
+outHandle, ; console output handle
+ADDR prompt, ; string pointer
+lengthof prompt - 1, ; string length
+ADDR bytesWritten, ; returns num bytes written
+0; not used
+
+call ReadHex
+mov ColorAttribute, ax
+
+call Crlf
+
+invoke SetConsoleTextAttribute, outHandle, ColorAttribute; 04Ah
+
+; Write a string to the console :
+INVOKE WriteConsole,
+outHandle, ; console output handle
+ADDR myString, ; string pointer
+lengthof myString - 1, ; string length
+ADDR bytesWritten, ; returns num bytes written
+0; not used
+
+;set the color back to black and white
+invoke SetConsoleTextAttribute, outHandle, 0Fh
+
+call Crlf
+call Crlf
+	
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

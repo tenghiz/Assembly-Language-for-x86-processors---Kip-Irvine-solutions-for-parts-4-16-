@@ -1,0 +1,51 @@
+;12.7 - 1 - Floating point comparison
+
+include Irvine32.inc
+INCLUDE macros.inc
+
+; .386
+; .model flat, stdcall
+;.stack 4096
+; ExitProcess PROTO, dwExitCode:DWORD
+
+.data 
+
+X real8 2.201
+Y real8 2.22
+
+prompt1 byte "X is lower", 0
+prompt1written dword 0
+
+prompt2 byte "X is not lower", 0
+prompt2written dword 0
+
+stdOutHandle dword 0
+
+.code
+main PROC
+
+INVOKE GetStdHandle, STD_OUTPUT_HANDLE
+mov stdOutHandle, eax
+
+finit
+
+fld Y
+fld X
+call ShowFPUStack
+call Crlf
+
+fcomi st(0), st(1)
+jnb L1
+
+invoke WriteConsole, stdOutHandle, addr prompt1, sizeof prompt1, addr prompt1written, null
+jmp L2
+
+L1:
+invoke WriteConsole, stdOutHandle, addr prompt2, sizeof prompt2, addr prompt2written, null
+
+L2:
+call Crlf
+
+exit
+main ENDP
+END main

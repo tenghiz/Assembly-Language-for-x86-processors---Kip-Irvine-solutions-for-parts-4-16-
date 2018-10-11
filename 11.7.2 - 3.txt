@@ -1,0 +1,36 @@
+; 11.7.2 - 3 - Show an example call to the CreateFile function
+; that will open an existing file for reading
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+CreateFile PROTO, ; create new file
+lpFilename : PTR BYTE, ; ptr to filename
+dwDesiredAccess : DWORD, ; access mode
+dwShareMode : DWORD, ; share mode
+lpSecurityAttributes : DWORD, ; ptr security attrib
+dwCreationDisposition : DWORD, ; file creation options
+dwFlagsAndAttributes : DWORD, ; file attributes
+hTemplateFile : DWORD
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+FileName byte "D:\irvine\MyFirstFile.txt", 0
+
+.code
+main PROC
+
+invoke CreateFile, addr FileName, GENERIC_READ, DO_NOT_SHARE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

@@ -1,0 +1,99 @@
+; 10.7.2 - 4 - Declare an array of Triangle structures.
+; Write a loop that initializes all edges.
+
+; This program is improved version of these given in a textbook:
+; First part initialize all the edges of an array of N triangles.
+
+; Second part prints all edges marked with numbers from '0' to N
+; and with different colours(from 02h to 0Fh).
+
+; ATTENTION: if edges of different triangles coincide, they drop out from the screen.
+;Higher is the UpperLimit for RandomRange, lower is the probability that edges will coincide.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+COORD STRUCT
+X WORD ?
+Y WORD ?
+COORD ENDS
+
+Triangle STRUCT
+Vertex1 COORD <>
+Vertex2 COORD <>
+Vertex3 COORD <>
+Triangle ENDS
+
+N = 10; number of triangles
+UpperLimit = 15; set the upper limit for RandomRange
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+arrayTriangle Triangle N dup(<>); declare an array of triangles
+
+.code
+main PROC
+
+call FillArray
+
+call PrintTriangles
+
+; set color back to black - and-white
+; push cursor away from triangles
+mov dh, 20
+mov dl, 20
+call Gotoxy
+mov al, 00001111b
+call SetTextColor
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+FillArray proc
+mov esi, offset arrayTriangle
+mov ecx, sizeof arrayTriangle; N*(3 edges)*(2 coord)*word
+shr ecx, 1; divide by word
+call Randomize
+L1 :
+mov eax, UpperLimit
+call RandomRange
+mov[esi], ax
+add esi, type word
+loop L1
+ret
+FillArray endp
+
+PrintTriangles proc
+mov esi, offset arrayTriangle
+mov ecx, N; counter for triangles
+mov bl, '0'; digit marker
+mov edi, 2;color marker
+L2:
+push ecx
+mov ecx, sizeof Triangle; (3 edges)*(2 coord)*word
+shr ecx, 2;divide by(2 coord)*word
+L3 :
+mov dh, byte ptr[esi]
+add esi, type word
+mov dl, byte ptr[esi]
+call Gotoxy
+add esi, type word
+mov eax, edi
+call SetTextColor
+mov al, bl
+call WriteChar
+loop L3
+inc edi; inc color marker
+inc bl;inc digit marker
+pop ecx
+loop L2
+ret
+PrintTriangles endp
+
+END main

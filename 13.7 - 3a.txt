@@ -1,0 +1,18 @@
+// 13.7 - 3 - Summing Three Arrays
+
+#include <iostream>
+
+int main()
+{
+	using namespace std;
+	const int array_length = 4;
+	int array1[array_length] = { 1,2,3,4 };
+	int array2[array_length] = { 2,3,4,5 };
+	int array3[array_length] = { 3,4,5,6 };
+	for (int i = 0; i < array_length; i++)
+	{
+		array1[i] = array1[i] + array2[i] + array3[i];
+		printf("%d ", array1[i]);
+	}
+	return 0;
+}

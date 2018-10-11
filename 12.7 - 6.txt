@@ -1,0 +1,145 @@
+; 12.7 - 6 - Quadratic Formula
+
+include Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+
+prompt byte "Root is imaginary number", 0
+prompt1 byte "This program calculates roots of quadratic equation Ax^2 + Bx + C = 0", 0
+prompt4 byte "Please enter coefficient B: ", 0
+prompt2 byte "Please enter coefficient A: ", 0
+prompt3 byte "Please enter coefficient C: ", 0
+prompt5 byte "Roots of quadratic equation are X1 = ST(0) and X2 = ST(1)", 0
+
+A real8 0.0
+B real8 0.0
+Cc real8 0.0
+
+four real8 4.0
+two real8 2.0
+
+X1 real8 0.0
+X2 real8 0.0
+
+.code
+main PROC
+
+finit
+
+mov edx, offset prompt1
+call WriteString
+call Crlf
+
+mov edx, offset prompt4
+call WriteString
+call ReadFloat; loads B to st(0)
+
+fst B
+
+; evaluate B ^ 2
+
+fld st(0)
+fmul
+
+mov edx, offset prompt2
+call WriteString
+call ReadFloat; loads A to st(0)
+
+fst A
+
+; evaluate 4 * A*C
+
+mov edx, offset prompt3
+call WriteString
+call ReadFloat; loads C to st(0)
+
+fst Cc
+
+fmul
+fmul four
+
+; -4 * A*C
+fchs
+
+; stack looks like this:
+; st(0) : -4 * A*C
+; st(1) : B ^ 2
+
+; B ^ 2 - 4 * A*C
+
+fadd
+
+; this section evaluates whether determinant is negative number
+
+fld X1; load zero to st(0)
+fcomi st(0), st(1)
+ja L1
+
+fstp X1
+
+; sqrt[(B ^ 2 - 4 * A*C)]
+
+fsqrt
+
+; sqrt[(B ^ 2 - 4 * A*C)] / (2 * A)
+
+fdiv two
+fdiv A
+
+; -B / (2 * A)
+
+fld B
+fchs
+fdiv two
+fdiv A
+
+; this operation copies sqrt[(B ^ 2 - 4 * A*C)] / (2 * A) to st(0)
+; now stack looks like this:
+; st(0) : sqrt[(B ^ 2 - 4 * A*C)] / (2 * A)
+; st(1) : -B / (2 * A)
+; st(2) : sqrt[(B ^ 2 - 4 * A*C)] / (2 * A)
+
+fld st(1)
+
+; st(1) is added to st(0)
+
+fadd st(0), st(1)
+
+;save st(0) to X1 and pop st(0)
+; now stack looks like this:
+; st(0) : -B / (2 * A)
+; st(1) : sqrt[(B ^ 2 - 4 * A*C)] / (2 * A)
+
+fstp X1
+fsub st(0), st(1)
+fstp X2
+
+; output of result
+
+mov edx, offset prompt5
+call WriteString
+
+finit
+
+fld X1
+fld x2
+call ShowFPUStack
+call Crlf
+
+jmp L2
+
+L1:
+mov edx, offset prompt
+call WriteString
+call Crlf
+
+L2:
+
+exit
+main ENDP
+END main

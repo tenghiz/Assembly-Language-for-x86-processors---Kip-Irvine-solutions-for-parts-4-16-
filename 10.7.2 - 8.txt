@@ -1,0 +1,44 @@
+; 10.7.2 - 8 - Write a macro named mWriteAt that locates the cursor
+; and writes a string literal to the console window.
+; Suggestion: Invoke the mGotoxy and mWrite macros
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mWriteAt macro X, Y, string
+local str1
+.data
+str1 byte string, 0
+.code
+mGotoxy X, Y
+mWriteString str1
+endm
+
+mWriteAt1 macro X, Y, string
+mGotoxy X, Y
+mWriteString string
+endm
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+string1 byte "Mama", 0
+
+.code
+main PROC
+
+mWriteAt 10, 20, "Mama"
+call Crlf
+
+mWriteAt1 1, 2, string1
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

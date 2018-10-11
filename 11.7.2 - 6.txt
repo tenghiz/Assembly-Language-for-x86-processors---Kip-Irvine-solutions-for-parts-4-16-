@@ -1,0 +1,71 @@
+; 11.7.2 - 6 - Show an example call to the WriteFile function
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+CreateFile PROTO, ; create new file
+lpFilename : PTR BYTE, ; ptr to filename
+dwDesiredAccess : DWORD, ; access mode
+dwShareMode : DWORD, ; share mode
+lpSecurityAttributes : DWORD, ; ptr security attrib
+dwCreationDisposition : DWORD, ; file creation options
+dwFlagsAndAttributes : DWORD, ; file attributes
+hTemplateFile : DWORD
+
+WriteFile PROTO,
+hFile:HANDLE, ; output handle
+lpBuffer:PTR BYTE, ; pointer to buffer
+nNumberOfBytesToWrite:DWORD, ; size of buffer
+lpNumberOfBytesWritten:PTR DWORD, ; num bytes written
+lpOverlapped:PTR DWORD
+
+SetFilePointer PROTO,
+hFile:HANDLE, ; file handle
+lDistanceToMove : SDWORD, ; bytes to move pointer
+lpDistanceToMoveHigh : PTR SDWORD, ; ptr bytes to move, high
+dwMoveMethod : DWORD
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+FileName byte "D:\irvine\MyFirstFile.txt", 0
+buffer byte "qwerty ", 0
+buffersize dword $-buffer-1
+NumberOfBytesToRead dword 10
+NumberOfBytesRead dword ?
+
+NumberOfCharsWritten dword ?
+
+fHandle handle ?
+
+DistanceToMove dword 0
+
+.code
+main PROC
+
+invoke CreateFile, addr FileName, GENERIC_WRITE, DO_NOT_SHARE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
+mov fHandle, eax
+
+mov ecx, 20
+mov eax, 0
+L1:
+push ecx
+mov DistanceToMove, eax
+invoke SetFilePointer, fHandle, DistanceToMove, NULL, FILE_BEGIN
+invoke WriteFile, fHandle, addr buffer, buffersize, NumberOfBytesRead, NULL
+mov eax, DistanceToMove
+add eax, buffersize
+pop ecx
+loop L1
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

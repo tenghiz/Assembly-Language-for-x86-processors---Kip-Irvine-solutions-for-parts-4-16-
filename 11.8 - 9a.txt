@@ -1,0 +1,165 @@
+; 11.8 - 9 - Last Access Date of a File
+
+; FileDate procedure is created to obtain all data concerning file creation and manipulation.
+
+;Please note how parameters are passed inside the procedure:
+; if CreateFile is invoked in MAIN, then 1st parameter should be ADDR FILENAME.
+; From the other side, if CreateFile is invoked inside of the procedure, then 1st parameter is only FILENAME.
+; Idem for FileTimeToSystemTime (check 2nd parameter, it also should be ADDR if invoked in MAIN).
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+HexToDec proto,
+OutputHandle:handle,
+Hex: dword
+
+CharOutput proto,
+CharHandle:handle,
+CharBuffer:ptr byte,
+
+FileDate proto,
+NameOfFile: ptr byte,
+TimeOfCreation: ptr SYSTEMTIME,
+TimeOfLastAccess: ptr SYSTEMTIME,
+TimeOfLastWrite: ptr SYSTEMTIME
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+filename byte "D:\MyFile.txt", 0
+filenameLength dword $- filename
+filenameWritten dword 0
+
+CreationTime1 SYSTEMTIME <>
+LastAccessTime1 SYSTEMTIME <>
+LastWriteTime1 SYSTEMTIME <>
+
+outHandle handle ?
+
+CarrRetLineFeed byte 0dh, 0ah, 0
+bytesWritten dword 0
+
+promptCreated byte " was created ", 0
+promptCreatedLength dword $ - promptCreated
+promptCreatedWritten dword 0
+
+ErrorPrompt byte "Wrong path to file!", 0
+ErrorPromptLength dword $- ErrorPrompt
+ErrorPromptWritten dword 0
+
+.code
+main PROC
+
+invoke GetStdHandle, STD_OUTPUT_HANDLE
+mov outHandle, eax
+
+invoke FileDate, addr filename, addr CreationTime1, addr LastAccessTime1, addr LastWriteTime1
+
+cmp ebx, 1
+je quit
+
+invoke WriteConsole, outHandle, addr filename, filenameLength, addr filenameWritten, NULL
+invoke WriteConsole, outHandle, addr promptCreated, promptCreatedLength, addr promptCreatedWritten, NULL
+
+mov eax, 0
+mov ax, CreationTime1.wYear
+invoke HexToDec, outHandle, eax
+
+mov eax, 0
+mov al, '.'
+invoke CharOutput, outHandle, eax
+
+mov eax, 0
+mov ax, CreationTime1.wMonth
+invoke HexToDec, outHandle, eax
+
+mov eax, 0
+mov al, '.'
+invoke CharOutput, outHandle, eax
+
+mov eax, 0
+mov ax, CreationTime1.wDay
+invoke HexToDec, outHandle, eax
+
+jmp ending
+
+quit:
+
+invoke WriteConsole, outHandle, addr ErrorPrompt, ErrorPromptLength, addr ErrorPromptWritten, NULL
+
+ending:
+
+invoke WriteConsole, outHandle, addr CarrRetLineFeed, 2, addr bytesWritten, NULL
+
+exit
+main ENDP
+
+FileDate proc,
+NameOfFile: ptr byte,
+TimeOfCreation: ptr SYSTEMTIME,
+TimeOfLastAccess: ptr SYSTEMTIME,
+TimeOfLastWrite: ptr SYSTEMTIME
+local FileHandle: handle, CreationTime: FILETIME, LastAccessTime: FILETIME, LastWriteTime: FILETIME
+clc
+INVOKE CreateFile,
+NameOfFile,
+GENERIC_READ, 
+DO_NOT_SHARE,
+NULL,
+OPEN_EXISTING, 
+FILE_ATTRIBUTE_NORMAL,
+0
+cmp eax, 0
+je L5
+mov FileHandle, eax
+invoke GetFileTime, FileHandle, addr CreationTime, addr LastAccessTime, addr LastWriteTime
+invoke FileTimeToSystemTime, addr CreationTime, TimeOfCreation
+invoke FileTimeToSystemTime, addr LastAccessTime, TimeOfLastAccess
+invoke FileTimeToSystemTime, addr LastWriteTime, TimeOfLastWrite
+invoke CloseHandle, FileHandle
+jmp L6
+L5:
+mov ebx, 1
+L6:
+ret
+FileDate endp
+
+HexToDec proc uses eax ebx ecx edx esi edi,
+OutputHandle:handle,
+Hex: dword
+local Dcml[4]:ptr byte, DecWritten:dword
+lea esi, Dcml
+add esi, lengthof Dcml
+dec esi
+mov eax, Hex
+L1 :
+cmp eax, 0
+je L2
+mov edx, 0
+mov ebx, 0ah
+div ebx
+add dl, 30h
+mov byte ptr[esi], dl
+dec esi
+jmp L1
+L2 :
+invoke WriteConsole, OutputHandle, addr Dcml, lengthof Dcml, addr DecWritten, NULL
+ret 
+HexToDec endp
+
+CharOutput proc uses eax ebx ecx edx esi esi,
+CharHandle:handle,
+CharBuffer:ptr byte
+local CharWritten:ptr dword
+mov CharBuffer, eax
+invoke WriteConsole, CharHandle, addr CharBuffer, 1, addr CharWritten, NULL
+ret
+CharOutput endp
+
+END main

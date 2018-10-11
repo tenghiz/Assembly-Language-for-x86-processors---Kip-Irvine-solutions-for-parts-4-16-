@@ -1,0 +1,96 @@
+;12.7 - 2 - Display Floating - Point Binary
+
+include Irvine32.inc
+INCLUDE macros.inc
+
+; .386
+; .model flat, stdcall
+;.stack 4096
+; ExitProcess PROTO, dwExitCode:DWORD
+
+.data 
+
+X real4 -0.125
+
+fract byte 23 dup(0)
+buffer1 byte 0
+ExpSign byte '+'
+exp byte 3 dup (30h)
+buffer byte 0
+negativity byte '+'
+
+consoleHandle dword 0
+
+charWritten dword 0
+
+CrlfCrlf byte 0Ah, 0Dh
+one byte "1.", 0
+exponente byte " E", 0
+
+.code
+main PROC
+
+mov eax, X
+
+mov esi, offset fract
+add esi, lengthof fract -1
+mov ecx, lengthof fract
+L1:
+shr eax, 1
+jc L2
+mov byte ptr [esi], 30h
+jmp L3
+L2:
+mov byte ptr [esi], 31h
+L3:
+dec esi
+loop L1
+
+cmp ah, 1
+jne L4
+mov negativity, '-'
+L4:
+
+.if al > 7fh
+sub al, 7fh
+jmp L5
+.elseif al < 7fh
+mov ExpSign, '-'
+mov bl, al
+mov al, 7fh
+sub al, bl
+jmp L5
+.elseif al == 7fh
+jmp L7
+.endif
+
+L5:
+mov esi, offset exp
+add esi, 2
+mov ecx, 3
+L6:
+mov ah, 0
+mov bl, 0Ah
+div bl
+or ah, 30h
+mov byte ptr [esi], ah
+dec esi
+loop L6
+
+L7:
+
+INVOKE GetStdHandle, STD_OUTPUT_HANDLE
+mov consoleHandle, eax
+
+INVOKE WriteConsole, consoleHandle, addr negativity, lengthof negativity, addr charWritten, null
+INVOKE WriteConsole, consoleHandle, addr one, lengthof one-1, addr charWritten, null
+INVOKE WriteConsole, consoleHandle, addr fract, lengthof fract, addr charWritten, null
+INVOKE WriteConsole, consoleHandle, addr exponente, lengthof exponente-1, addr charWritten, null
+INVOKE WriteConsole, consoleHandle, addr ExpSign, lengthof ExpSign, addr charWritten, null
+INVOKE WriteConsole, consoleHandle, addr exp, lengthof exp, addr charWritten, null
+
+INVOKE WriteConsole, consoleHandle, addr CrlfCrlf, 2, addr charWritten, null
+
+exit
+main ENDP
+END main

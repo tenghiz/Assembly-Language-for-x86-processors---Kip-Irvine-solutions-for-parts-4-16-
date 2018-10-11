@@ -1,0 +1,118 @@
+; 11.8 - 6 - Student Records
+
+;if dwMoveMethod = FILE_BEGIN:
+
+; Function WriteFile writes data to a file.
+;If WriteFile invoked several times, all corresponding data begin from the new line:
+; WriteFile, A
+; WriteFile, B
+; --------------------->*.txt
+; A
+; B.
+
+; Function SetFilePointer permits moves the position pointer.
+; Let s suppose WriteFile is invoked for the first time : invoke WriteFile, A, lengthofA.
+; If SetFilePointer s parameter lDistanceToMove = lengthofA, then after invoking
+; WriteFile for the second time the final result will be:
+; WriteFile, A
+; SetFilePointer, lengthofA
+; WriteFile, B
+; ---------------------- > *txt
+; AB
+
+; If parameter lDistanceToMove = lengthofA + 2, then final result is:
+; --------------------->*.txt
+; A
+; B.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+OutHandle handle 0
+InHandle handle 0
+FileHandle handle 0
+
+filename byte "D:\irvine\part 11\Ex6.txt", 0
+
+MyCrlf byte 0dh, 0ah
+MyCrlfWritten dword 0
+
+StudName byte "Please enter student's name: ", 0
+StudNameLength dword $ - StudName
+StudNameWritten dword 0
+
+NameInputLength = 20
+NameInput byte  NameInputLength dup(0)
+NameInputWritten dword 0
+
+NameOutput byte "Name: ", 0
+NameOutputLength dword $- NameOutput
+NameOutputWritten dword 0
+
+IDNumber byte "Please enter student's ID: ", 0
+IDNumberLength dword $ - IDNumber
+IDNumberWritten dword 0
+
+IDInputLength = 20
+IDInput byte IDInputLength dup(0)
+IDInputWritten dword 0
+
+IDOutput byte "ID number: ", 0
+IDOutputLength dword $ - IDOutput
+IDOutputWritten dword 0
+
+.code
+main PROC
+
+invoke GetStdHandle, STD_OUTPUT_HANDLE
+mov OutHandle, eax
+
+invoke GetStdHandle, STD_INPUT_HANDLE
+mov InHandle, eax
+
+INVOKE CreateFile,
+ADDR filename,
+GENERIC_WRITE, ; write to the file
+DO_NOT_SHARE,
+NULL,
+CREATE_ALWAYS, ; don't erase existing file
+FILE_ATTRIBUTE_NORMAL,
+0
+
+mov FileHandle, eax
+
+invoke WriteConsole, OutHandle, addr StudName, StudNameLength, addr StudNameWritten, NULL
+invoke ReadConsole, InHandle, addr NameInput, NameInputLength, addr NameInputWritten, NULL
+
+invoke WriteConsole, OutHandle, addr IDNumber, IDNumberLength, addr IDNumberWritten, NULL
+invoke ReadConsole, InHandle, addr IDInput, IDInputLength, addr IDInputWritten, NULL
+
+
+invoke WriteFile, FileHandle, addr NameOutput, NameOutputLength, addr NameOutputWritten, NULL
+invoke SetFilePointer, FileHandle, 0, 0, FILE_CURRENT
+invoke WriteFile, FileHandle, addr NameInput, NameInputWritten, addr NameInputWritten, NULL
+
+invoke WriteFile, FileHandle, addr MyCrlf, 2, addr MyCrlfWritten, NULL
+
+invoke WriteFile, FileHandle, addr IDOutput, IDOutputLength, addr IDOutputWritten, NULL
+invoke SetFilePointer, FileHandle, 0, 0, FILE_CURRENT
+invoke WriteFile, FileHandle, addr IDInput, IDInputWritten, addr IDInputWritten, NULL
+
+INVOKE CloseHandle, FileHandle
+
+invoke WriteConsole, OutHandle, addr MyCrlf, 2, addr MyCrlfWritten, NULL
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

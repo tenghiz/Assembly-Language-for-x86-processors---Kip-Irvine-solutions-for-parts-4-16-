@@ -1,0 +1,38 @@
+; 10.7.2 - 7 - mPromptInteger displays a prompt and inputs an integer from the user
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mPromptInteger macro prompt, value1
+local string
+.data
+string byte &prompt, 0
+.code
+mov edx, offset string
+call WriteString
+call ReadDec
+mov value1, eax
+call Crlf
+mov eax, value1
+call WriteDec
+endm
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+minVal DWORD ?
+
+.code
+main PROC
+
+mPromptInteger "Enter the minimum value", minVal
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

@@ -1,0 +1,70 @@
+;10.8 - 1 - mReadkey Macro
+
+; ReadChar procedure - Scan codes
+
+; ALT key + numbers and letters,
+;function keys + alt, ctrl, shift.
+
+; the procedure sets AL to zero, and AH contains a keyboard scan code.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mReadkey Macro
+local L1
+local L2
+local prompt
+local prompt1
+local prompt2
+local prompt3
+.data
+prompt byte "Please press any key... ", 0
+prompt1 byte "Pressed key is: ", 0
+prompt2 byte "Scan code is: ", 0
+prompt3 byte "Continue? y/n ", 0
+.code
+L1:
+mov ebx, 0
+call Crlf
+mov edx, offset prompt
+call WriteString
+call ReadChar
+mov bl, ah
+call Crlf
+mov edx, offset prompt1
+call WriteString
+call WriteChar
+call Crlf
+mov edx, offset prompt2
+call WriteString
+mov eax, 0
+mov al, bl
+call WriteHex
+call Crlf
+mov edx, offset prompt3
+call WriteString
+call ReadChar
+cmp al, 'n'
+je L2
+jmp L1
+L2:
+call Crlf
+endm
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mReadkey
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

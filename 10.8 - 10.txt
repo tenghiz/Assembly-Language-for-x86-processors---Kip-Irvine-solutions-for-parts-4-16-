@@ -1,0 +1,184 @@
+; 10.8 - 10 - Three - Operand Instructions(SKETCH for add and mul.DOESN T WORK FOR negative numbers)
+
+; This program consists of creating 4 macros for addition, substraction, multiplication and division.
+; These 4 macros can subsequently be used in different combinations, for example,
+; mul == > add == > div == > END.
+
+; The cornerstone of this program is multiplication macro, which defines the outlook of all other macros.
+; Since all parameters are dword, it means that multiplication between eax and ebx will give qword eax : edx product.
+; It means that output memory operand should be an array of 2 dword: one for eax, another for edx.
+; Since this program suggests different combinations of macros to be used, it means that; multiplication output
+; memory operand can be input operand for addition, etc.Therefore, all memory operands should be arrays of 2 dword.
+
+; Therefore, mADD3 macro should include ADC instruction for extended addition.
+
+; mSBB3 macro should include SBB instruction.
+
+; mMUL3 macro should include "extended multiplication" set of instructions.
+; Let s examine how it works:
+; For example, input arrays contain following information:
+; x dword 50000h, 8h - corresponds to qword 0000 0008 0005 0000h 
+; y dword 30000h, 6h - corresponds to qword 0000 0006 0003 0000h
+; Multiplication is proceeded in following manner:
+; x1*y1 + x2*y1 + x2*y1 + y2*y2.
+; Attention!Here y2*y2 can be discarded, because it is multiplication of two 64 - bit	multiplicands,
+; which gives 128 - bit product.
+; IMUL is avoided, otherwise errors are generated.
+; Example: multiply fffffffeffffffff by 0000000100000003.
+; First step is to multiply ffffffff by 3. Normally product should be 2fffffffd, but because IMUL extends the sign
+; of the lower half of product to upper half, final product is fffffffffffffffd.ERROR!
+
+; mDIV3 macro is much more complicated.Ideally in order to avoid divide overflow,
+; 32 - bit divisor and 64 - bit dividend should be used.This program proposes simplified approach.
+; Explanation: let s suppose X is dividend and Y is divisor. Four possible input and output situations are possible.
+;Input array 1:
+; x dword a, b 
+; y dword c, d ========> divide only upper dwords.
+; Input array 2:
+; x dword a, 0 
+; y dword c, d ========> product = 0.
+; Input array 3:
+; x dword a, b
+; y dword c, 0 ========> product = x dword a, b
+; Input array 1:
+; x dword a, 0
+; y dword c, 0 ========> divide only lower dwords.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mADD3 macro source1, source2, destination
+mov esi, OFFSET source1
+mov edi, OFFSET source2
+mov ebx, OFFSET destination
+mov ecx, 2
+pushad
+clc
+L1 :
+mov eax, [esi]
+adc eax, [edi]
+pushfd
+mov[ebx], eax
+add esi, type dword
+add edi, type dword
+add ebx, type dword
+popfd
+loop L1
+mov dword ptr[ebx], 0
+adc dword ptr[ebx], 0
+popad
+endm
+
+mMUL3 macro source1, source2, destination
+pushad
+mov esi, OFFSET source1
+mov edi, OFFSET source2
+mov ebx, OFFSET destination
+mov eax, [esi]
+mov ecx, [edi]
+mul ecx; multiple 01 by 01
+mov[ebx], eax
+add ebx, type dword
+mov[ebx], edx
+add esi, type dword
+mov eax, [esi]
+mul ecx; multiple 10 by 01
+add[ebx], eax
+sub esi, type dword
+add edi, type dword
+mov eax, [esi]
+mov ecx, [edi]
+mul ecx; multiple 01 by 10
+add[ebx], eax
+popad
+endm
+
+mSUB3 macro source1, source2, destination
+pushad
+mov esi, OFFSET source1
+mov edi, OFFSET source2
+mov ebx, OFFSET destination
+mov ecx, 2
+clc
+L2 :
+mov eax, [esi]
+sbb eax, [edi]
+pushfd
+mov[ebx], eax
+add esi, type dword
+add edi, type dword
+add ebx, type dword
+popfd
+loop L2
+popad
+endm
+
+mDIV3 macro source1, source2, destination
+mov esi, offset source1
+mov edi, offset source2
+mov ebx, offset destination
+add esi, type dword
+mov eax, [esi]
+cmp eax, 0
+jne L3
+jmp L6
+L3 :
+add edi, type dword
+mov ecx, [edi]
+cmp ecx, 0
+jne L4
+jmp L5
+L4 :
+mov edx, 0
+div ecx
+L5 :
+mov [ebx], eax
+add ebx, type dword
+mov edx, 0
+mov[ebx], edx
+jmp quit
+L6 :
+add edi, type dword
+mov ecx, [edi]
+cmp ecx, 0
+jne L7
+sub esi, type dword
+mov eax, [esi]
+sub edi, type dword
+mov ecx, [edi]
+jmp L4
+L7 :
+mov edx, 0
+mov[ebx], edx
+add ebx, type dword
+mov[ebx], edx
+jmp quit
+quit :
+
+endm
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+x sdword 10055555h, 1h
+y sdword 12345h, 17h
+z sdword 2 dup(? )
+
+.code
+main PROC
+
+mSUB3 y, x, z
+
+mMUL3 z,x,y
+
+mDIV3 y,x,z
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

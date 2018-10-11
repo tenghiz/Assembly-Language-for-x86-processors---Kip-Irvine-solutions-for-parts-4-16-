@@ -1,0 +1,50 @@
+; 11.7.2 - 2 - Show an example call to the WriteConsole function
+
+; USE endl EQU <0dh, 0ah> in order to perform Crlf call
+
+;Something interesting can be seen in console when "sizeofbuffer-1" is used in parameters list
+; invoke WriteConsole, StOutHandle, addr buffer, sizeofbuffer-1, addr chars_read, NULL
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+WriteConsole PROTO,
+hConsoleOutput:HANDLE,
+lpBuffer : PTR BYTE,
+nNumberOfCharsToWrite : DWORD,
+lpNumberOfCharsWritten : PTR DWORD,
+lpReserved : DWORD
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+buf_size = 30
+endl EQU <0dh, 0ah>
+
+.data
+
+StOutHandle HANDLE ?
+buffer byte "My first WriteConsole program", endl
+buffer1 byte endl
+sizeofbuffer dword $-buffer
+chars_read dword ?
+
+.code
+main PROC
+
+invoke GetStdHandle, std_output_handle
+mov StOutHandle, eax
+
+invoke WriteConsole, StOutHandle, addr buffer, sizeofbuffer, addr chars_read, NULL
+
+invoke WriteConsole, StOutHandle, addr buffer1, 1, addr chars_read, NULL
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

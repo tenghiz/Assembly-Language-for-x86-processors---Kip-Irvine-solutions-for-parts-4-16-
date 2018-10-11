@@ -1,0 +1,71 @@
+=========== Calling C functions from ASM =========
+
+================== C++ =================
+extern "C" void asm_main();
+
+void main()
+{
+	asm_main();
+}
+
+================= ASM ==================
+
+; 13.7 - 5 - LastIndexOf
+
+; All the registers should be saved before calling RAND function
+
+.586
+.MODEL flat, C
+
+rand proto
+printf PROTO, pString : PTR BYTE, args : VARARG
+scanf PROTO, pFormat : PTR BYTE, args : VARARG
+
+.data
+
+str1 BYTE "Please enter a number: ", 0
+str2 BYTE "%d", 0
+str3 byte "Number found!", 0dh, 0ah, 0
+str4 byte "Number wasn't found!", 0dh, 0ah, 0
+
+array1 dword 100000 dup (0)
+searchVal dword 0
+
+.code
+asm_main PROC
+
+INVOKE printf, ADDR str1
+INVOKE scanf, ADDR str2, ADDR searchVal
+
+mov esi, offset array1
+mov ecx, lengthof array1
+L1:
+pushad
+pushfd
+invoke rand
+mov[esi], eax
+popfd
+popad
+add esi, type dword
+loop L1
+
+mov esi, offset array1
+mov ecx, lengthof array1
+L2:
+mov eax, [esi]
+cmp eax, searchVal
+je L3
+add esi, type dword
+loop L2
+
+invoke printf, addr str4
+jmp exit
+
+L3:
+invoke printf, addr str3
+
+exit:
+
+ret
+asm_main ENDP
+END

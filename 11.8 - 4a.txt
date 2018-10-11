@@ -1,0 +1,89 @@
+; 11.8 - 4 - Random Screen Fill (without wrappers)
+
+; This program fills each cell of screen with a random character in a random color.
+; Assign a 50 % probability that the color of any character will be WHITE.
+
+; GetConsoleScreenBufferInfo is used to retrieve the size(area or number of characters) of current screen.
+; This vakue is passed to loop counter which fills all the cells with random characters.
+
+; First part of loop uses RandomRange to determine whether the color is white.
+; SetConsoleTextAttribute is used then to set the color of a cell.
+; Second RandomRange is used to determine random color in range from 0 to 0ffh.
+;WriteConsole is used to print char.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+;.386
+;.model flat, stdcall
+;.stack 4096
+;ExitProcess proto, dwExitCode:dword
+
+.data
+
+OutHandle handle 0
+
+csbi CONSOLE_SCREEN_BUFFER_INFO <>
+
+CharWritten dword ?
+symbol dword 0
+
+MyCrlf byte 0Dh, 0Ah
+MyCrlfWritten dword 0
+
+.code
+main PROC
+
+;get output handle
+invoke GetStdHandle, STD_OUTPUT_HANDLE
+mov OutHandle, eax
+
+;obtain the size (area) of current screen
+invoke GetConsoleScreenBufferInfo, OutHandle, addr csbi
+mov ax, csbi.srWindow.Right
+mov bx, csbi.srWindow.Bottom
+mul bx
+
+;move previously calculated area to ecx
+mov ecx, 0
+mov cx, ax
+call Randomize
+L1:
+mov eax, 10; if eax<5 then color is white (0f0h)
+call RandomRange
+cmp eax, 5
+ja L2
+pushad
+pushfd
+invoke SetConsoleTextAttribute, OutHandle, 0f0h
+popfd
+popad
+jmp L3
+L2:
+mov eax, 0ffh; the range of all possible color combinations
+call RandomRange
+pushad
+pushfd
+invoke SetConsoleTextAttribute, OutHandle, ax
+popfd
+popad
+L3:
+mov eax, 256
+call RandomRange
+mov symbol, eax
+pushad
+pushfd
+invoke WriteConsole, OutHandle, addr symbol, 1, addr CharWritten, NULL
+popfd
+popad
+loop L1
+
+invoke WriteConsole, OutHandle, addr MyCrlf, 2, addr MyCrlfWritten, NULL
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

@@ -1,0 +1,66 @@
+; 11.8 - 11 - Linked List (2nd version)
+
+; User is prompted to fill linked list. If NULL is entered, procedure is stoped.
+
+;This linked list is ended with NULL tail node.
+
+INCLUDE Irvine32.inc
+
+.data
+
+hHeap HANDLE ? ; heap handle
+pArray DWORD ?
+
+prompt1 byte "Please enter number: ", 0
+counter dword 0
+
+.code
+main PROC
+
+invoke GetProcessHeap
+mov hHeap, eax
+
+INVOKE HeapAlloc, hHeap, HEAP_ZERO_MEMORY, 1000
+mov pArray, eax
+
+mov esi, pArray
+L1:
+mov edx, offset prompt1
+call WriteString
+call ReadDec
+mov[esi], eax
+cmp eax, 0
+je L3
+add esi, type dword
+mov eax, esi
+mov[esi], eax
+add esi, type dword
+mov eax, counter
+inc eax
+mov counter, eax
+jmp L1
+
+L3:
+call Crlf
+
+mov esi, pArray
+mov ecx, counter
+L2:
+mov eax, [esi]
+call WriteDec
+mov al, ':'
+call WriteChar
+add esi, type dword
+mov eax, [esi]
+call WriteHex
+call Crlf
+add esi, type dword
+loop L2
+mov eax, [esi]
+call WriteDec
+
+call Crlf
+
+exit
+main ENDP
+END main

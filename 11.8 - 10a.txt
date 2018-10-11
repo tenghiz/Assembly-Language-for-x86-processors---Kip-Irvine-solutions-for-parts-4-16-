@@ -1,0 +1,69 @@
+; 11.8 - 10 - Reading a Large File(version 2)
+
+; Modify the ReadFile.asm program in Section 11.1.8
+; so that it can read files larger than its input buffer.
+
+; Reading a File(ReadFile.asm)
+; Opens, reads, and displays a text file using
+; procedures from Irvine32.lib.
+
+INCLUDE Irvine32.inc
+INCLUDE macros.inc
+BUFFER_SIZE = 500
+
+.data
+
+OutHandle handle 0
+InHandle handle 0
+
+buffer BYTE BUFFER_SIZE DUP(? )
+NumberOfBytesRead dword 0
+bufferWritten dword 0
+
+filename BYTE 80 DUP(0)
+fileHandle HANDLE ?
+
+.code
+main PROC
+
+; Let user input a filename.
+mWrite "Enter an input filename: "
+mov edx, OFFSET filename
+mov ecx, SIZEOF filename
+call ReadString
+
+; Open the file for input.
+mov edx, OFFSET filename
+call OpenInputFile
+mov fileHandle, eax
+
+; Check for errors.
+cmp eax, INVALID_HANDLE_VALUE; error opening file ?
+jne file_ok; no: skip
+mWrite <"Cannot open file", 0dh, 0ah>
+jmp quit; and quit
+file_ok :
+
+invoke GetStdHandle, STD_OUTPUT_HANDLE
+mov OutHandle, eax
+
+L1:
+invoke ReadFile, fileHandle, addr buffer, BUFFER_SIZE, addr NumberOfBytesRead, NULL
+
+invoke WriteConsole, OutHandle, addr buffer, NumberOfBytesRead, addr bufferWritten, NULL
+
+mov eax, NumberOfBytesRead
+mov ebx, BUFFER_SIZE
+cmp ebx, eax
+jbe L1
+
+close_file :
+mov eax, fileHandle
+call CloseFile
+quit :
+
+call Crlf
+
+exit
+main ENDP
+END main

@@ -1,0 +1,75 @@
+===================== Call C functions from ASM ====================
+
+DON'T FORGET!!!
+To add legacy_stdio library to your linker input in the IDE, open the context menu for the project node, 
+choose Properties, then in the Project Properties dialog box, choose Linker, and edit the Linker Input to add 
+legacy_stdio_definitions.lib to the semi-colon-separated list."
+
+legacy_stdio_definitions.lib resides in the 
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib folder (and subfolders).
+
+==================== C startup module =======================
+
+//13.7 - 4 - Prime numbers
+
+extern "C" void asmMain();
+
+int main()
+{
+	asmMain();
+	return 0;
+}
+
+
+=================== ASM module ============================
+
+; 13.7 - 4 - Prime Number Program
+; Calling C functions from ASM
+
+.586
+.MODEL flat, C
+
+printf PROTO, pString : PTR BYTE, args : VARARG
+scanf PROTO, pFormat : PTR BYTE, args : VARARG
+
+.data
+
+prime_numbers dword 2, 3, 5, 7, 11, 13, 17, 19, 23, 29
+number dword 0
+
+string byte "Please enter number: ",0 
+printf_string byte "%d", 0dh, 0ah, 0
+scanf_string byte "%d", 0
+
+.code
+asmMain PROC
+
+INVOKE printf, ADDR string
+invoke scanf, addr scanf_string, addr number
+
+mov esi, offset prime_numbers
+mov ecx, lengthof prime_numbers
+L1 :
+mov eax, number
+mov edx, 0
+mov ebx, [esi]
+div ebx
+cmp edx, 0
+je not_prime_number
+add esi, 4
+loop L1
+
+prime_number :
+mov eax, 1
+INVOKE printf, ADDR printf_string, eax
+jmp L2
+
+not_prime_number :
+mov eax, 0
+INVOKE printf, ADDR printf_string, eax
+
+L2 :
+
+ret
+asmMain ENDP
+END

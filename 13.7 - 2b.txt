@@ -1,0 +1,104 @@
+; 13.7 - 2 - Longest Increasing Sequence
+
+;This program returns the longest increasing sequence and its length
+
+// It's impossible to create 
+// void Longest_Increasing_Sequence(int * array1, int length_array, int * increase_sequence, int count).
+// Though ASM-subroutine works well, however COUNT stays equal ZERO, 
+// increase_sequence [length_array] is neither filled.
+
+// The only solution is int Longest_Increasing_Sequence(int * array1, int length_array, int * increase_sequence).
+// ASM-subroutine returns COUNT.
+
+
+========================================C++ =============================
+
+#include <iostream>
+
+extern "C" int Longest_Increasing_Sequence(int * array1, int length_array, int * increase_sequence);
+
+int main()
+{
+	using namespace std;
+	const int length_array = 10;
+	int array1 [length_array] = { -5, 10, 20, 14, 17, 26, 42, 22, 19, -5 };
+	cout << "Array is: ";
+	for (int i = 0; i < length_array; i++)
+		printf("%d ", array1[i]);
+	cout << endl;
+	int increase_sequence [length_array] = {0};
+	int counter = Longest_Increasing_Sequence(array1, length_array, increase_sequence);
+	cout << "Length of the longest increasing sequence is ";
+	printf("%d\n", counter);
+	cout << "Sequence is: ";
+	for (int i = 0; i < counter; i++)
+		cout << increase_sequence[i] << " ";
+	cout << endl;
+	return 0;
+}
+
+========================================== ASM ===========================
+
+.586
+.MODEL flat, C
+
+Longest_Increasing_Sequence proto,
+array1: ptr dword,
+length_array : dword,
+increase_sequence : ptr dword
+
+.code
+
+Longest_Increasing_Sequence proc uses ebx ecx edx esi edi,
+array1 : ptr dword,
+length_array : dword,
+increase_sequence : ptr dword
+local counter: dword
+local position: dword
+
+		mov counter, 0
+		mov esi, array1
+		mov edi, array1
+		add edi, 4
+		mov ecx, length_array
+		mov edx, 0; set counter
+		L1 :
+		mov eax, [esi]
+		mov ebx, [edi]
+		cmp ebx, eax
+		jl L2
+		inc edx; if (i + 1) > (i), then increase counter
+		jmp L3
+		L2 : ; here current counter in EDX compared to previously saved value in COUNTER
+		mov eax, counter
+		cmp edx, eax
+		jb L3; if current value in EDX is bigger than that previously saved in COUNTER, then EDX is saved in counter
+		mov counter, edx
+		mov position, esi; save index of last member of the longest sequence
+		mov edx, 0
+		L3:
+		add esi, 4
+		add edi, 4
+		loop L1
+
+		mov esi, position
+		mov eax, counter
+		mov ebx, 4; type dword
+		mul ebx
+		sub esi, eax
+		mov edi, increase_sequence
+		mov ecx, counter
+		inc ecx
+		L4 :
+		mov eax, [esi]
+		mov[edi], eax
+		add esi, 4
+		add edi, 4
+		loop L4
+
+		mov eax, counter
+		inc eax
+
+ret
+Longest_Increasing_Sequence endp
+end

@@ -1,0 +1,55 @@
+; 10.8 - 6 - mWriteInt Macro(modified version, see below)
+
+; This macro asks user to enter some integer and then specify it s size
+; (0 for WORD, 1 for DWORD).Depending on specified size, the integer is saved
+; in corresponding memory operand.
+
+; THIS PROGRAM PERMITS ASSEMBLY, BUT DOESN T WORK CORRECTLY!
+; Unfortunately, if / ifidn directives are checked in ASSEMBLY TIME, not in RUNTIME.
+; it means, that expression(ifidn <eax>, <0>) should know the content of eax before ASSEMBLY TIME.
+;Since this value is unknown, only expression following (else) is taken in account.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mReadInt1 macro Xword, Ydword
+.data
+prompt byte "Please enter an integer: ", 0
+prompt1 byte "Please enter integer's type (0 for WORD, 1 for DWORD): ", 0
+.code
+mov edx, offset prompt
+call WriteString
+call ReadInt
+mov ebx, eax
+call Crlf
+mov edx, offset prompt1
+call WriteString
+call ReadDec
+ifidn <eax>, <0>
+mov Xword, ax
+else
+mov Ydword, eax
+endif
+call Crlf
+endm
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+argument1 word 0
+argument2 dword 0
+
+.code
+main PROC
+
+mReadInt1 argument1, argument2
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

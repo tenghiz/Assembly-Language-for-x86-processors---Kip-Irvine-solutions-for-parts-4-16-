@@ -1,0 +1,62 @@
+; 13.7 - 2 - Longest Increasing Sequence(ONLY ASM)
+
+; This program looks for a longest sequence of increasing numbers in a given array.
+; [i + 1] is compared to[i], increasing counter until[i + 1] < [i]. Value of counter and position of[i] are saved.
+; Comparison is repeated again until[i + 1] <[i]. Current counter is compared to previously saved value, 
+;if current value is bigger, then value of counter and position of[i] are re-saved.
+
+INCLUDE Irvine32.inc
+
+.data
+
+array1 dword 14, 17, 26, 42, -5, 10, 20, 22, 19, -5
+counter dword 0
+position dword 0
+sequence dword lengthof array1
+
+.code
+main PROC
+
+mov esi, offset array1
+mov edi, offset array1 + type dword
+mov ecx, lengthof array1
+mov edx, 0; set counter
+L1:
+mov eax, [esi]
+mov ebx, [edi]
+cmp ebx, eax
+jl L2
+inc edx; if (i + 1) > (i), then increase counter
+jmp L3
+L2 : ;here current counter in EDX compared to previously saved value in COUNTER
+mov eax, counter
+cmp edx, eax
+jb L3; if current value in EDX is bigger than that previously saved in COUNTER, then EDX is saved in counter
+mov counter, edx
+mov position, esi; save index of last member of the longest sequence
+mov edx, 0
+L3:
+add esi, type dword
+add edi, type dword
+loop L1
+
+mov esi, position
+mov eax, counter
+mov ebx, type dword
+mul ebx
+sub esi, eax
+mov edi, offset sequence
+mov ecx, counter
+inc ecx
+L4 :
+mov eax, [esi]
+mov[edi], eax
+call WriteInt
+call Crlf
+add esi, type dword
+add edi, type dword
+loop L4
+
+INVOKE ExitProcess, 0
+main ENDP
+END main

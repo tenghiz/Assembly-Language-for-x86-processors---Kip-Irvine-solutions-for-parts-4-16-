@@ -1,0 +1,102 @@
+; 10.8 - 10 - Three - Operand Instructions
+
+; Modification of previously composed mDIV3 macro.
+
+; Current program performs division using shifting instruction.
+;Explanation:
+; Input array:
+; x sdword a, b - dividend
+; y sdword c, d - divisor
+; First combination of SHLD B, SHL A instructions is performed until first significant bite is encountered.
+; Counter of the loop(n) indicates position of this bite, thus we assume that B + A = 2 ^ n.
+; The same operation is performed with divisor, if counter is(m), then C + D = 2 ^ m.
+; Thus, product of division can be calculated as 2 ^ (n - m).
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mDIV3 macro source1, source2, destination
+local a; counter for dividend
+local b; counter for divisor
+.data
+a dword 0
+b dword 0
+.code
+mov edi, 0; loop is used both for dividend (edi=0) and divisor (edi=1).
+mov esi, offset source1
+L3:
+mov ecx, 0; counter for loop 
+mov eax, [esi]
+mov ebx, [esi + type dword]
+clc
+L1 :
+shld ebx, eax, 1; combination SHLD + SHR is performed until first significant bite is encountered
+pushfd
+shl eax, 1
+popfd
+jc L2; if first significant bite is encountered
+inc ecx
+jmp L1
+L2 :
+inc edi
+cmp edi, 1; loop is used both for dividend(edi = 0) and divisor(edi = 1).
+ja L4; if edi = 2 (divisor was already counted), then jmp L4
+sub ecx, 64
+neg ecx
+mov a, ecx
+mov esi, offset source2;dividend was counted, now loop counts divisor
+jmp L3
+L4:
+sub ecx, 64
+neg ecx
+mov b, ecx
+mov eax, a
+sub eax, b
+cmp eax, 0
+je L7
+jg L5
+jl L9
+L5:
+mov ecx, eax
+mov eax, 1
+mov ebx, 0
+L6:
+shld ebx, eax, 1
+shl eax, 1
+loop L6
+jmp L8
+L7:
+mov eax, 1
+mov ebx, 0
+jmp L8
+L9:
+mov eax, 0
+mov ebx, 0
+L8:
+mov esi, offset destination
+mov [esi], eax
+add esi, type dword
+mov [esi], ebx
+endm
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+x sdword 0ffffffffh, 0h
+y sdword 12345h, 0h
+z sdword 2 dup(? )
+
+.code
+main PROC
+
+mDIV3 x, y, z
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

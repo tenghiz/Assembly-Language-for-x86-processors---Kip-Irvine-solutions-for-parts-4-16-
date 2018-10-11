@@ -1,0 +1,107 @@
+; 10.8 - 9 - Shifting Multiple Doublewords (SKETCH)
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+array1 dword 11223344h, 55667788h, 12345678h
+
+count dword 0
+
+prompt byte "Original array: ", 0
+prompt1 byte "Please enter shift count: ", 0
+prompt2 byte "Please choose direction of shift, "
+byte "press 0 for left, 1 for right: ", 0
+prompt3 byte "Shifted array: ", 0
+
+.code
+main PROC
+
+mov edx, offset prompt
+call WriteString
+
+mov esi, offset array1
+mov ecx, lengthof array1
+L1:
+mov eax, [esi]
+call WriteHex
+mov al, ','
+call WriteChar
+add esi, type array1
+loop L1
+
+call Crlf
+
+mov edx, offset prompt1
+call WriteString
+call ReadDec
+mov count, eax
+
+mov edx, offset prompt2
+call WriteString
+
+mov eax, 0
+call ReadInt
+cmp eax, 0
+je ShiftLeft
+
+ShiftRight:
+mov esi, offset array1
+add esi, sizeof array1 - type array1
+mov ecx, lengthof array1
+L2:
+push ecx
+mov ecx, count
+mov eax, [esi]
+mov ebx, [esi-type array1]
+shrd eax, ebx, cl
+mov [esi], eax
+sub esi, type array1
+pop ecx
+loop L2
+
+jmp EndShift
+
+ShiftLeft:
+mov esi, offset array1
+mov ecx, lengthof array1
+L3 :
+push ecx
+mov ecx, count
+mov eax, [esi]
+mov ebx, [esi + type array1]
+shld eax, ebx, cl
+mov[esi], eax
+add esi, type array1
+pop ecx
+loop L3
+
+EndShift:
+
+mov edx, offset prompt3
+call WriteString
+
+mov esi, offset array1
+mov ecx, lengthof array1
+L4 :
+mov eax, [esi]
+call WriteHex
+mov al, ','
+call WriteChar
+add esi, type array1
+loop L4
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

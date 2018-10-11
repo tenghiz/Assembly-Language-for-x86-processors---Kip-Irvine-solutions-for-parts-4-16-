@@ -1,0 +1,31 @@
+; 10.7.2 - 11 - Write a macro named mDumpMemx that receives a single parameter, the name of a variable.
+; Your macro must call the mDumpMem macro from the book’s library, passing it the variable’s
+; offset, number of units, and unit size.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mDumpMemx macro X
+mDumpMem OFFSET X, LENGTHOF X, TYPE X
+call Crlf
+endm
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+string1 byte "Mama", 0
+
+.code
+main PROC
+
+mDumpMemx string1
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

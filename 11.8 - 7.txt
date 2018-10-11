@@ -1,0 +1,125 @@
+; 11.8 - 7 - Scroll the console window
+
+; This program includes HexToDec procedure, which transforms Hex to Dec and then show it on a screen.
+
+; Program works in a following manner:
+; 1. Lines are written to the console window;
+; 2. GetConsoleScreenBufferInfo is called to determin the size of console window;
+; 3. Information from srWindow is loaded to structure windowRect;
+; 4. windowRect.Bottom is diminished in order to focus the window on 2 - 3 lines of text;
+; NB!It s impossible to change srWindow.Bottom and then load it back to CONSOLE_SCREEN_BUFFER_INFO;
+; 5. Starting from the first line, both windowRect.Top and windowRect.Bottom incremented each 500 usec;
+; 6. After scrolling all the lines, initial size of console window is restored.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+HexToDec proto,
+OutputHandle:handle,
+Hex: dword
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+N = 50
+
+text byte "This line will be repeated several times", 0
+textlength dword $-text
+textwritten dword 0
+
+OutHandle handle 0
+
+MyCrlf byte 0dh, 0ah
+MyCrlfWritten dword 0
+
+number dword 0
+numberlength dword $-number 
+numberwritten dword 0
+
+csbi CONSOLE_SCREEN_BUFFER_INFO <>
+
+windowRect SMALL_RECT <0, -1, 0, 0>
+
+.code
+main PROC
+
+invoke GetStdHandle, STD_OUTPUT_HANDLE
+mov OutHandle, eax
+
+mov ecx, N
+mov eax, 1
+L4:
+push ecx
+push eax
+invoke HexToDec, OutHandle, eax
+invoke WriteConsole, OutHandle, addr text, textlength, addr textwritten, NULL
+invoke WriteConsole, OutHandle, addr MyCrlf, 2, addr MyCrlfWritten, NULL
+pop eax
+pop ecx
+inc eax
+loop L4
+
+invoke WriteConsole, OutHandle, addr MyCrlf, 2, addr MyCrlfWritten, NULL
+
+invoke Sleep, 1000
+
+invoke GetConsoleScreenBufferInfo, OutHandle, addr csbi; determines the size of console window
+mov ax, csbi.srWindow.Bottom
+sub ax, N
+mov windowRect.Bottom, ax
+mov ax, csbi.srWindow.Right
+mov windowRect.Right, ax
+invoke SetConsoleWindowInfo, OutHandle, true, addr windowRect; program doesn t allow to load to csbi.srWindow
+
+mov ecx, N
+L5:
+pushad
+pushfd
+mov ax, windowRect.Bottom
+inc ax
+mov windowRect.Bottom, ax
+mov ax, windowRect.Top
+inc ax
+mov windowRect.Top, ax
+invoke SetConsoleWindowInfo, OutHandle, true, addr windowRect
+invoke Sleep, 500
+popfd
+popad
+loop L5
+
+invoke SetConsoleWindowInfo, OutHandle, true, addr csbi.srWindow
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+HexToDec proc uses eax ebx ecx edx esi edi,
+OutputHandle:handle,
+Hex: dword
+local Dcml[2]:ptr byte, DecWritten:dword
+lea esi, Dcml
+add esi, lengthof Dcml
+dec esi
+mov eax, Hex
+L1 :
+cmp eax, 0
+je L2
+mov edx, 0
+mov ebx, 0ah
+div ebx
+add dl, 30h
+mov byte ptr[esi], dl
+dec esi
+jmp L1
+L2 :
+invoke WriteConsole, OutputHandle, addr Dcml, lengthof Dcml, addr DecWritten, NULL
+ret 
+HexToDec endp
+
+END main

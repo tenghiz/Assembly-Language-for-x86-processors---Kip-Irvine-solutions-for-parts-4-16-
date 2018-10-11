@@ -1,0 +1,43 @@
+; 10.8 - 2 - mWritestringAttr Macro
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mWritestring macro ColorAttribute, string
+.data
+outHandle HANDLE 0
+bytesWritten DWORD ?
+.code
+INVOKE GetStdHandle, STD_OUTPUT_HANDLE
+mov outHandle, eax
+invoke SetConsoleTextAttribute, outHandle, ColorAttribute
+INVOKE WriteConsole,
+outHandle,
+ADDR string,
+lengthof string - 1, 
+ADDR bytesWritten, 
+0
+invoke SetConsoleTextAttribute, outHandle, 0Fh
+call Crlf
+call Crlf
+endm
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+myString db "Here is my string", 0
+
+.code
+main PROC
+
+mWritestring 04Eh, myString
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

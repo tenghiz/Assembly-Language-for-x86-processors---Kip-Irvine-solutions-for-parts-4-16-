@@ -1,0 +1,39 @@
+;12.6.2 - 10
+
+include Irvine32.inc
+INCLUDE macros.inc
+
+; .386
+; .model flat, stdcall
+;.stack 4096
+; ExitProcess PROTO, dwExitCode:DWORD
+
+.data 
+
+val1 sdword 7
+val2 real8 7.1
+val3 real8 0.0
+
+.code
+main PROC
+
+finit
+
+fld val2
+call ShowFPUStack
+call Crlf
+
+fsqrt
+
+call ShowFPUStack
+call Crlf
+
+fiadd val1
+call ShowFPUStack
+call Crlf
+
+fst val3
+
+exit
+main ENDP
+END main

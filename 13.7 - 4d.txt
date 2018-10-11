@@ -1,0 +1,72 @@
+==================== Linking ASM function to C++ code ===================
+
+======================== ASM module ==========================
+; OFFSET and LEA both can be used, the same is for LENGTHOF
+
+; ASM module can contain both .code and .data modules
+
+; 13.7 - 4 - Prime Number Program
+
+.586
+.MODEL flat, C
+
+prime_numbers proto,
+number:dword
+
+.data
+
+array1 dword 2, 3, 5, 7, 11, 13, 17, 19, 23, 29
+
+.code
+
+prime_numbers proc,
+number:dword
+
+;lea esi, array1
+;mov ecx, 10
+mov esi, offset array1
+mov ecx, lengthof array1
+L1 :
+mov eax, number
+mov edx, 0
+mov ebx, [esi]
+div ebx
+cmp edx, 0
+je not_prime_number
+add esi, 4
+loop L1
+
+prime_number :
+mov eax, 1
+jmp L2
+
+not_prime_number :
+mov eax, 0
+
+L2 :
+
+ret
+prime_numbers ENDP
+END
+
+========================== C++ module ============================
+
+//13.7 - 4 - Prime numbers
+
+#include <iostream>
+
+extern "C" int prime_numbers(int number);
+
+int main()
+{
+	using namespace std;
+	int number;
+	cout << "Please enter a number: ";
+	cin >> number;
+	int x = prime_numbers(number);
+	if (x == 1)
+		printf("This is prime number.\n");
+	else
+		printf("This is not prime number.\n");
+	return 0;
+}

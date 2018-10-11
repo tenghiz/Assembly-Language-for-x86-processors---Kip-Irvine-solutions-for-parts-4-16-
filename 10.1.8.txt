@@ -1,0 +1,45 @@
+;10.1.8
+
+INCLUDE Irvine32.inc
+
+MyStruct STRUCT
+field1 WORD 3h
+field2 DWORD 20 DUP(? )
+MyStruct ENDS
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+first MyStruct <>; Declare a MyStruct variable with default values
+second MyStruct <1>; Declare a MyStruct variable that initializes the first field
+third MyStruct <, 20 dup(1)>; Declare a MyStruct variable and initialize the second field
+array1 MyStruct 20 dup(<>); Declare a variable as an array of 20 MyStruct objects
+
+.code
+main PROC
+
+movzx eax, first.field1; move field1 of the first array element to AX.
+
+mov esi, offset array1
+mov word ptr[esi + 2 * sizeof MyStruct], 20h; element and move AX to field1 of the third array
+
+;alternative to previous exercise
+mov esi, 0
+mov (MyStruct ptr array1[esi]).field1, 30h
+add esi, type MyStruct
+mov(MyStruct ptr array1[esi]).field1, 30h
+
+mov eax, type MyStruct
+mov eax, sizeof MyStruct
+
+mov eax, sizeof MyStruct.field2
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

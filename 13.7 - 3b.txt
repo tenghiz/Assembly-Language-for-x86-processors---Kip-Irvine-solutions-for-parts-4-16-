@@ -1,0 +1,41 @@
+// 13.7 - 3 - Summing Three Arrays
+
+// Surprisingly, this program works only if ASM code is incorporated in function.
+// If ASM code is inside of MAIN, in this case program assembles, but generate an error during execution.
+
+#include <iostream>
+
+void Summing_Three_Arrays(int * array1, int * array2, int * array3, int array_length)
+{
+	__asm
+	{
+		mov esi, array1
+		mov edi, array2
+		mov edx, array3
+		mov ecx, array_length
+		L1 :
+		mov eax, [edi]
+		add eax, [edx]
+		add[esi], eax
+		add esi, 4
+		add edi, 4
+		add edx, 4
+		loop L1
+	}
+}
+
+int main()
+{
+	using namespace std;
+	const int array_length = 4;
+	int array1[array_length] = { 1,2,3,4 };
+	int array2[array_length] = { 2,3,4,5 };
+	int array3[array_length] = { 3,4,5,6 };
+
+	Summing_Three_Arrays(array1, array2, array3, array_length);
+
+	for (int i = 0; i < array_length; i++)
+		printf("%d ", array1[i]);
+
+	return 0;
+}

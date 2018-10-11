@@ -1,0 +1,19 @@
+//13.7 - 4 - Prime numbers
+// Numbers in IF statement are considered as not prime numbers.
+
+#include <iostream>
+
+int main()
+{
+	using namespace std;
+	int number;
+	cout << "Please enter a number: ";
+	cin >> number;
+	if (number % 2 == 0|| number % 3 == 0|| number % 5 == 0|| number % 7 == 0
+		|| number % 11 == 0|| number % 13 == 0|| number % 17 == 0)
+		cout << "This is not prime number.\n";
+	else
+		cout << "This is prime number.\n";
+	
+	return 0;
+}

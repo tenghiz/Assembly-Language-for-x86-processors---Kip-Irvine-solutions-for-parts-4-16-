@@ -1,0 +1,38 @@
+; 13.7 - 4 - Prime Number Program
+
+INCLUDE Irvine32.inc
+
+.data
+
+prime_numbers dword 2,3,5,7,11,13,17,19,23,29
+number dword 311
+
+.code
+main PROC
+
+mov esi, offset prime_numbers
+mov ecx, lengthof prime_numbers
+L1:
+mov eax, number
+mov edx, 0
+mov ebx, [esi]
+div ebx
+cmp edx, 0
+je not_prime_number
+add esi, 4
+loop L1
+
+prime_number:
+mov eax, 1
+call WriteDec
+jmp L2
+
+not_prime_number:
+mov eax, 0
+call WriteDec
+
+L2:
+
+INVOKE ExitProcess, 0
+main ENDP
+END main

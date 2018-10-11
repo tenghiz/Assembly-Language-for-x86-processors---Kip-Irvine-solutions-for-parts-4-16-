@@ -1,0 +1,25 @@
+//13.7 - 4 - Prime numbers
+// Another variant. Here loop checks whether number is not prime.
+
+#include <iostream>
+
+int main()
+{
+	using namespace std;
+	const int first_ten = 10;
+	int prime_numbers[first_ten] = { 2,3,5,7,11,13,17,19,23,29 };
+	int number;
+	cout << "Please enter a number: ";
+	cin >> number;
+	int prime_yes = 0;// 0 == prime number, 1 == not a prime number
+	for (int i = 0; i < first_ten; i++)
+		if (number % prime_numbers[i] == 0)
+		{
+			cout << "This is not a prime number.\n";
+			prime_yes = 1; //set marker to one
+			break;
+		}
+	if (prime_yes == 0)
+		cout << "This is prime number.\n";
+	return 0;
+}

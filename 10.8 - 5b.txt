@@ -1,0 +1,41 @@
+; 10.8 - 5 - mReadInt Macro(version C)
+
+; This macro reads some integer(X) and its type(eltType, 0 for word or 1 for dword),
+; and then saves the integer to corresponding memory operand.
+
+; Default argument initializer.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mReadInt Macro Z, eltType: = <1>, Xword, Ydword
+mov eax, Z
+if (eltType eq 0)
+mov Xword, ax
+else
+mov Ydword, eax
+endif
+endm
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+argument1 word 0
+argument2 dword 0
+
+eltType1 dword 1
+
+.code
+main PROC
+
+mReadInt 12345678h, , argument1, argument2; DEFAULT ARGUMENT!!!
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

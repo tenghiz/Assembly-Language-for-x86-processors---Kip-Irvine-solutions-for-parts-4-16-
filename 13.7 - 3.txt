@@ -1,0 +1,32 @@
+; 13.7 - 3 - Summing Three Arrays
+
+INCLUDE Irvine32.inc
+
+.data
+
+array1 dword 1, 2, 3, 4
+array2 dword 2,3,4,5
+array3 dword 3,4,5,6
+
+.code
+main PROC
+
+mov esi, offset array1
+mov edi, offset array2
+mov edx, offset array3
+mov ecx, lengthof array1
+L1:
+mov eax, [edi]
+add eax, [edx]
+add [esi], eax
+mov eax, [esi]
+call WriteDec
+call Crlf
+add esi, 4
+add edi, 4
+add edx, 4
+loop L1
+
+INVOKE ExitProcess, 0
+main ENDP
+END main

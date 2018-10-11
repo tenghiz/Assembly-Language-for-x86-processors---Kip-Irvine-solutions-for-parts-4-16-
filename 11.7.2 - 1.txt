@@ -1,0 +1,40 @@
+; 11.7.2 - 1 - Show an example call to the ReadConsole function
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+ReadConsole PROTO,
+hConsoleInput:HANDLE, ; input handle
+lpBuffer : PTR BYTE, ; pointer to buffer
+nNumberOfCharsToRead : DWORD, ; number of chars to read
+lpNumberOfCharsRead : PTR DWORD, ; ptr to num bytes read
+lpReserved : DWORD
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+buf_size = 10
+
+.data
+
+StInpHandle HANDLE ?
+buffer byte buf_size dup(0)
+chars_read dword ?
+
+.code
+main PROC
+
+invoke GetStdHandle, std_input_handle
+mov StInpHandle, eax
+
+invoke ReadConsole, StInpHandle, addr buffer, buf_size, addr chars_read, NULL
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

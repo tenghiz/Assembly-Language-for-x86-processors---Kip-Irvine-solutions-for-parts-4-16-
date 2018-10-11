@@ -1,0 +1,60 @@
+; 11.7.2 - 5 - Show an example call to the ReadFile function
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+INCLUDE GraphWin.inc
+
+CreateFile PROTO, ; create new file
+lpFilename : PTR BYTE, ; ptr to filename
+dwDesiredAccess : DWORD, ; access mode
+dwShareMode : DWORD, ; share mode
+lpSecurityAttributes : DWORD, ; ptr security attrib
+dwCreationDisposition : DWORD, ; file creation options
+dwFlagsAndAttributes : DWORD, ; file attributes
+hTemplateFile : DWORD
+
+ReadFile PROTO,
+hFile:HANDLE, ; input handle
+lpBuffer : PTR BYTE, ; ptr to buffer
+nNumberOfBytesToRead : DWORD, ; num bytes to read
+lpNumberOfBytesRead : PTR DWORD, ; bytes actually read
+lpOverlapped : PTR DWORD
+
+WriteConsole PROTO,
+hConsoleOutput:HANDLE,
+lpBuffer:PTR BYTE,
+nNumberOfCharsToWrite:DWORD,
+lpNumberOfCharsWritten:PTR DWORD,
+lpReserved:DWORD
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+FileName byte "D:\irvine\MyFirstFile.txt", 0
+buffer byte 20 dup(0)
+NumberOfBytesToRead dword 10
+NumberOfBytesRead dword ?
+
+NumberOfCharsWritten dword ?
+
+.code
+main PROC
+
+invoke CreateFile, addr FileName, GENERIC_READ, DO_NOT_SHARE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
+
+invoke ReadFile, eax, addr buffer, NumberOfBytesToRead, NumberOfBytesRead, NULL
+
+INVOKE GetStdHandle, STD_OUTPUT_HANDLE
+
+invoke WriteConsole, eax, addr buffer, 10, addr NumberOfCharsWritten, NULL
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

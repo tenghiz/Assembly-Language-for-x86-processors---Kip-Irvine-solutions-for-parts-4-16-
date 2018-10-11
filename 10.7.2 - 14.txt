@@ -1,0 +1,34 @@
+; 10.7.2 - 14 - Write a statement using the IF directive;
+; if Z is out of range, display a message during assembly indicating that Z is invalid.
+
+INCLUDE Irvine32.inc
+INCLUDE Macros.inc
+
+mWriteChar macro Z
+IF(Z LT 'a') OR(Z GT 'z')
+ECHO Warning : Z is out of range.
+EXITM
+else
+mov al, Z
+call WriteChar
+call Crlf
+ENDIF
+endm
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mWriteChar 'xx'
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main
