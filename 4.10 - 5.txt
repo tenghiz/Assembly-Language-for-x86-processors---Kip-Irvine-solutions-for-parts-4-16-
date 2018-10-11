@@ -1,0 +1,37 @@
+; AddVariables.asm - Chapter 3 example.
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+; p. 136 Programming exercises, ex. 5 - Fibonacci Numbers
+
+fib1 dword 1d
+fib2 dword 1d
+fib dword 7 dup(0)
+
+.code
+main PROC
+
+mov eax, fib1
+mov fib, eax
+mov eax, fib2
+mov fib + 4, eax
+mov esi, offset fib
+mov edi, offset fib+8
+mov ecx, lengthof fib - 2
+L1:
+mov eax, 0
+add eax, [esi]
+add esi, type fib
+add eax, [esi]
+mov [edi], eax
+add edi, type fib
+loop L1
+
+invoke ExitProcess,0
+main endp
+end main

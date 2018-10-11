@@ -1,0 +1,125 @@
+; 6.11.2 - 4 - college registration form
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+name1 byte 100 dup (?)
+TRUE = 1
+FALSE = 0
+gradeAverage WORD ?; test value
+credits WORD ?; test value
+OkToRegister BYTE ?
+
+BlueTextOnGray = blue + (lightGray * 16)
+prompt BYTE "This is a college registration form. Only a person with Grade > 350 or Grade > 250 && Credits < 16 or Credits < 12 is allowed", 0
+prompt1 BYTE "Enter a name of candidate: ", 0
+prompt2 BYTE "Enter candidate's grade: ", 0
+prompt21 BYTE "ERROR! The value should be between 0 and 400: ", 0
+prompt3 BYTE "Enter candidate's credits: ", 0
+prompt31 BYTE "ERROR! The value should be between 0 and 20: ", 0
+prompt4 BYTE "The student can register", 0
+prompt5 BYTE "The student cannot register", 0
+
+.code
+main proc
+
+mov eax, BlueTextOnGray
+call SetTextColor
+call Clrscr
+
+mov edx, OFFSET prompt
+call WriteString
+call Crlf
+call Crlf
+
+mov edx, OFFSET prompt1
+call WriteString
+
+mov edx, OFFSET name1
+mov ecx, SIZEOF name1
+call ReadString
+
+L11:
+mov edx, OFFSET prompt2
+call WriteString
+call ReadDec
+cmp eax, 400
+ja L10
+mov gradeAverage, ax
+jmp L12
+L10:
+mov edx, OFFSET prompt21
+call WriteString
+call Crlf
+jmp L11
+L12:
+
+L21:
+mov edx, OFFSET prompt3
+call WriteString
+call ReadDec
+cmp eax, 20
+ja L22
+mov credits, ax
+jmp L23
+L22 :
+mov edx, OFFSET prompt31
+call WriteString
+call Crlf
+jmp L21
+L23:
+
+call Crlf
+
+mov edx, OFFSET name1
+call WriteString
+call Crlf
+
+movzx eax, gradeAverage
+call WriteDec
+call Crlf
+
+movzx eax, credits
+call WriteDec
+call Crlf
+
+mov OkToRegister, FALSE
+cmp gradeAverage, 350
+jb L3
+jmp L1
+L3:
+cmp gradeAverage, 250
+jb L4
+cmp credits, 16
+ja L4
+jmp L1
+L4:
+cmp credits, 12
+ja L2
+L1:
+mov OkToRegister, TRUE
+L2:
+
+cmp OkToRegister, 1
+jne L5
+mov edx, OFFSET prompt4
+call WriteString
+call Crlf
+jmp L6
+L5:
+mov edx, OFFSET prompt5
+call WriteString
+call Crlf
+call Crlf
+L6:
+
+exit
+main endp
+
+; invoke ExitProcess, 0
+end main

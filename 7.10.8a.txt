@@ -1,0 +1,110 @@
+; 7.10.8 - Add Packed Integers - procedure
+
+; This program don t use ADC instruction
+
+; If CF = 1, then ebx = 1 and it is added to the resulting sum.
+
+; The key feature of this program is combination of
+; pop and push instructions together with JC.
+; Before loop begins, ebx = 0 and it s pushed to the stack.
+; When first component is added to al, ebx is popped and added to al.
+; Finally second component is added.
+
+; If this addition generates CF = 1, then ebx = 1. This value pushed to the stack inside the loop.
+; When loop repeats, previously pushed value popped back to ebx and it s added to new sum.
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+prompt byte "Please enter first number (maximum 8 digits allowed): ", 0
+prompt1 byte "Please enter second number (maximum 8 digits allowed): ", 0
+prompt2 byte "Result: ", 0
+
+val1 dword 0
+val2 dword 0
+product dword 0
+
+.code
+main PROC
+
+; This block saves two numbers to the memory.
+
+mov edx, OFFSET prompt
+call WriteString
+
+call ReadHex
+mov val1, eax
+
+call Crlf
+
+mov edx, OFFSET prompt1
+call WriteString
+
+call ReadHex
+mov val2, eax
+
+call Crlf
+
+call AddPacked
+
+mov edx, OFFSET prompt2
+call WriteString
+
+mov eax, product
+call WriteHex
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+AddPacked proc
+
+pushfd
+pushad
+
+mov ecx, type dword
+mov esi, offset val1
+mov edi, offset val2
+mov edx, offset product
+mov ebx, 0; ebx is used to hold carry
+push ebx
+L1 :
+mov eax, 0
+clc
+pop ebx; CF from previous addition, first carry was set before the loop
+mov al, byte ptr[esi]
+add al, bl; carry should be added here, if addition is carried out later, then overflow occured!
+add al, byte ptr[edi]
+daa; decimal adjust after addition
+mov[edx], al
+jnc L2
+mov ebx, 1; if CF = 1
+push ebx
+jmp L3
+L2 :
+mov ebx, 0; if CF = 0
+push ebx
+L3 :
+inc esi
+inc edi
+inc edx
+loop L1
+
+pop ebx; ebx was pushed before loop
+
+popad
+popfd
+
+ret
+AddPacked endp
+
+END main

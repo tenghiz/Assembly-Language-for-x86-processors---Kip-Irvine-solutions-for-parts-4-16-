@@ -1,0 +1,72 @@
+; 8.11 - 3 - Blinking chess table
+
+; This is a modification of previous program;
+; The idea was to simplify the program, removing SetColor2 subroutine.
+; and simply carrying the coloured row to the next line.
+; The program checks whether the lenghth of line is equal to set value
+; and then move the row to the next line.
+
+;!!!THIS PROGRAM WORKS ONLY WHEN THE NUMBER OF SQUARES IS ODD (3, 5, 7, etc).
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mov ecx, 0Eh; set counter 
+L5:
+mov edi, ecx; move counter to edi
+shl edi, 4; shift value from lower nibble to upper nibble(set foreground color)
+mov dh, 0
+push ecx
+mov ecx, 49; total number of squares (7x7)
+mov dl, 0
+L1 :; ---------------------------- -
+call Gotoxy
+mov eax, ecx
+clc
+shr al, 1
+jc L2
+mov eax, edi; here is the blinking color
+jmp L3
+L2 :
+mov eax, 0F0h
+L3 :
+call SetTextColor
+mov al, 20h
+call WriteChar
+mov al, 20h
+call WriteChar
+add dl, 2
+movzx eax, dl; ----------This section checks whether the length of line is equal to 8 squares
+mov ebx, 14d; each square is composed of 2 'spaces'
+div bl
+cmp ah, 0
+jne L10
+inc dh
+mov dl, 0
+L10:
+loop L1; --------------------------
+pop ecx
+mov eax, 500
+call Delay
+loop L5
+
+call Crlf
+call Crlf
+
+mov eax, 0Fh
+call SetTextColor
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

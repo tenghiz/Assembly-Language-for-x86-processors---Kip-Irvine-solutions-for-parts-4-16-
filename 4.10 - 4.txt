@@ -1,0 +1,36 @@
+; AddVariables.asm - Chapter 3 example.
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+; p. 136 Programming exercises, ex. 4 - Copying a Word Array to a DoubleWord array
+
+array1 word 100h, 200h, 300h, 400h
+array2 dword 4 dup(0)
+
+.code
+main PROC
+
+; movzx eax, array1
+; mov array2, eax
+; movzx eax, array1 + 2
+; mov array2 + 4, eax
+	
+mov esi, offset array1
+mov edi, offset array2
+mov ecx, lengthof array1
+L1:
+mov eax, 0
+mov ax, [esi]
+mov [edi], eax
+add esi, type array1
+add edi, type array2
+loop L1
+
+invoke ExitProcess,0
+main endp
+end main

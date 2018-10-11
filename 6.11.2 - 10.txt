@@ -1,0 +1,95 @@
+; 6.11.2 - 10 - Parity checking
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+prompt byte "This program calculates XOR of an array", 0
+prompt1 byte "Please enter numbers: ", 0
+prompt2 byte "XOR = ", 0
+prompt3 byte "Parity: 0 ", 0
+prompt4 byte "Parity: 1 ", 0
+
+array1 dword 5 dup(? )
+
+.code
+main PROC
+
+mov edx, OFFSET prompt
+call WriteString
+call Crlf
+mov edx, OFFSET prompt1
+call WriteString
+call Crlf
+call Crlf
+
+; here program prompts user to enter numbers
+; counter ebx is used to show index of element
+
+mov ebx, 0
+mov esi, offset array1
+mov ecx, lengthof array1
+L2:
+inc ebx
+mov eax, ebx
+call WriteDec
+mov al, 3Ah; prints SPACE
+call WriteChar
+call ReadDec
+mov[esi], eax
+add esi, type array1
+loop L2
+
+; this block calculates XOR of an array
+; since parity flag is affected by different opeartions(add, etc),
+; parity flag is saved in stack by pushfd
+
+mov eax, 0
+mov ebx, 0
+mov esi, offset array1 + type array1
+mov ecx, sizeof array1-1
+mov eax, array1[0]
+L1:
+mov bl, [esi]
+popfd; pop parity flag from stack
+xor eax, ebx
+pushfd; push parity flag to stack
+add esi, type array1
+loop L1
+
+push eax; eax contains XORed value, push it to stack
+
+mov edx, OFFSET prompt2
+call WriteString
+
+pop eax; pop XORed value from stack
+call WriteDec
+
+call Crlf
+
+popfd; pop parity flag from stack
+jp L3; if parity 1, then jp L3
+
+mov edx, OFFSET prompt3
+call WriteString
+jmp L4
+
+L3:
+mov edx, OFFSET prompt4
+call WriteString
+
+L4:
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+
+exit
+main ENDP
+
+END main

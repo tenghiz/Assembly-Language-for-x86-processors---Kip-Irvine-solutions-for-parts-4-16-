@@ -1,0 +1,34 @@
+; 8.10.2 - 5
+; create local variable which points to a 16 - bit integer
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+var1 word 1234h
+
+.code
+main PROC
+
+call AddThree
+
+invoke ExitProcess, 0
+; exit
+main ENDP
+
+AddThree proc
+local pArray : ptr word
+add esp, 4
+push offset var1
+; mov eax, [pArray] - this command mov to eax offset of var1
+mov esi, pArray
+mov eax, [esi]
+ret
+AddThree endp
+
+END main

@@ -1,0 +1,37 @@
+; 9.9.2 - 1 and 2 - [base-index] and [base-index-displacement] operands
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+array1 dword 1, 2, 3
+rowsize = ($ - array1)
+dword 4,5,6
+dword 7,8,9
+
+.code
+main PROC
+
+; [base - index]
+row_index = 0
+column_index = 1
+mov ebx, OFFSET array1
+add ebx, rowsize * row_index
+mov esi, column_index
+mov eax, [ebx + esi*type array1]
+
+;[base-index-displacement]
+mov ebx, offset array1
+mov esi, 2
+mov eax,[ebx+esi*type array1+rowsize*0]
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

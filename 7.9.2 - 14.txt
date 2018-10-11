@@ -1,0 +1,56 @@
+; 7.10.2 - 14 - the aaa instruction adjusts the content of AL
+; after addition of two unpacked BCD
+
+; IF(low nibble > 9) or (auxiliary carry is set AC = 1)
+; al = al + 6
+; ah = ah + 1
+; and al, 0Fh
+
+; for example, if EAX = 00000072h and AC = 1
+; al = al + 6 == 78h
+; ah = ah + 1 == 01
+; and al, 0Fh == 08h
+; EAX = 108h
+
+; Half carry flag or auxiliary carry flag is set AC=1
+; when addition creates a carry from lowest nibble to uppest
+; al = 0Ah
+; add al, 2
+; al = 0Ch, no carry from lowest nibble, AC = 0
+
+; al = 0Ah
+; add al, 6
+; al = 10h, carry from lowest nibble, AC = 1
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+; this part is used only to set AC = 1
+; actually, any other instruction can be used
+
+mov eax, 0
+mov al, '8'
+add al, '8'
+
+; this sequence also can set AC = 1
+
+mov eax, 0Ah
+add al, 6
+
+mov eax, 16h
+aaa
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

@@ -1,0 +1,30 @@
+; 5.8.2 Algorithm workbench - 4 - copy an element to the previous position in the same array
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+array DWORD 1000h, 2000h, 3000h, 4000h
+
+.code
+main PROC
+
+mov edi, offset array
+mov ecx, lengthof array
+L1:
+push [edi]
+add edi, type array
+loop L1
+
+mov edi, offset array + sizeof array - 2*type array
+mov ecx, lengthof array - 1
+L2:
+pop [edi]
+sub edi, type array
+loop L2
+
+INVOKE ExitProcess, 0
+main ENDP
+
+END main

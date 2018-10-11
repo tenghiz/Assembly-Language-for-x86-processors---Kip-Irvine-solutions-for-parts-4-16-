@@ -1,0 +1,47 @@
+; AddVariables.asm - Chapter 3 example.
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+; p. 136 Programming exercises, ex. 1 - Converting Big Endian to Little Endian 
+
+
+bigEndian byte 12h, 34h, 56h, 78h
+bigEndian1 byte 4 dup (?)
+littleEndian dword ?
+
+.code
+main PROC
+	
+COMMENT @
+mov al, bigEndian +3
+mov bigEndian1, al
+mov al, bigEndian +2
+mov bigEndian1+1, al
+mov al, bigEndian +1
+mov bigEndian1 + 2, al
+mov al, bigEndian
+mov bigEndian1+3, al
+mov eax, dword ptr bigEndian1
+mov littleEndian, eax
+@
+
+mov esi, offset bigEndian
+mov edi, offset bigEndian1
+mov ecx, lengthof bigEndian
+L1:
+mov al, [esi]+3
+mov [edi], al
+dec esi
+inc edi
+loop L1
+mov eax, dword ptr bigEndian1
+mov littleEndian, eax
+	
+invoke ExitProcess,0
+main endp
+end main

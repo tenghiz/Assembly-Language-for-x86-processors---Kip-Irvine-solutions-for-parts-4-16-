@@ -1,0 +1,81 @@
+; 8.11 - 4 - FindThrees Procedure
+
+; This is optimized version of FindThree procedure.
+; Previous version was using 3 registers to accumulate three consequtive values of 3:
+; mov eax, [esi]
+; cmp eax, 3
+; jne EXIT
+; mov ebx, [esi + 4]
+; ............
+; mov edx, [esi + 8]
+; The major disadvantage of this procedure is that it could be applyed only to
+; limited sequence of 'threes' (3 or 4), because the number of registers is limited.
+
+; Current program permits to overcome this limitation, using 2 loops.
+; First loop only recieve the offset of array and then transmits it to second loop.
+; Second loop has counter = 3, because secuence of 3 "threes" is in question.
+; Second loop screen first element of array, if it s 3, then loop screens second element, and further.
+; When all 3 consequtive elements are "threes", then jmp out of first loop.
+; WriteDec subroutine prints the position of sequence.
+;Otherwise the length of array is printed.
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+array1 dword 1, 2, 3, 3, 3, 4, 3, 2, 3, 2, 3, 1
+
+.code
+main PROC
+
+push offset array1
+push lengthof array1
+
+call FindThrees
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+FindThrees proc
+push ebp
+mov ebp, esp
+mov esi, [ebp + 12]
+mov ecx, [ebp + 8]
+L1:; ------------------------------------ -
+push ecx
+mov eax, esi
+mov ecx, 3
+mov edx, 0
+L2 :; -------------------------- -
+mov ebx, [eax]
+cmp ebx, 3; this is important condition, otherwise sequence like 2,3,4 or 1,1,7 will be also counted
+jne L4
+add edx, ebx
+add eax, type array1
+loop L2;--------------------------
+L4:
+pop ecx; immediately after the inner loop, otherwise ecx will be set to 0
+cmp edx, 9
+je L3
+add esi, type array1
+loop L1;-------------------------------------
+L3:
+mov eax, [ebp + 8]
+sub eax, ecx
+inc eax
+call WriteDec; prints the position of sequence in array
+mov esp, ebp
+pop ebp
+ret
+FindThrees endp
+
+END main

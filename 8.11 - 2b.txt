@@ -1,0 +1,77 @@
+; 8.11 - 2 - Chess table (small)
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mov dh, 0
+mov ecx, 6
+L5:
+mov edi, ecx
+push ecx
+mov dl, 0
+mov ecx, 6
+L1:
+call Gotoxy
+mov esi, edi
+shr esi, 1
+jc L6
+call SetColor1
+jmp L7
+L6:
+call SetColor2
+L7:
+call SetTextColor
+mov al, 20h
+call WriteChar
+mov al, 20h
+call WriteChar
+add dl, 2
+loop L1
+inc dh
+pop ecx
+loop L5
+
+call Crlf
+call Crlf
+
+mov eax, 0Fh
+call SetTextColor
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+SetColor1 proc
+mov ebx, ecx
+shr ebx, 1
+jc L2
+mov eax, 0F0h
+jmp L3
+L2 :
+mov eax, 070h
+L3 :
+ret
+SetColor1 endp
+
+SetColor2 proc
+mov ebx, ecx
+shr ebx, 1
+jnc L21
+mov eax, 0F0h
+jmp L31
+L21 :
+mov eax, 070h
+L31 :
+ret
+SetColor2 endp
+
+END main

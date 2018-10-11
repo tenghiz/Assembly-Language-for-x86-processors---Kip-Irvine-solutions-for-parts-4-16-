@@ -1,0 +1,43 @@
+; 8.10.2 - 10 - DumpMemory(proc + parameter list, uses + reglist)
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+array1 dword 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+.code
+main PROC
+
+push offset array1
+push lengthof array1
+push type array1
+call DumpMemory
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+DumpMemory proc uses esi ecx ebx,
+val1: dword,
+val2 : dword,
+val3 : dword
+; push ebp
+; mov ebp, esp
+mov esi, val3; [ebp + 16]
+mov ecx, val2; [ebp + 12]
+mov ebx, val1; [ebp + 8]
+call DumpMem
+call Crlf
+call Crlf
+; mov esp, ebp
+; pop ebp
+ret
+DumpMemory endp
+
+END main

@@ -1,0 +1,67 @@
+; 5.9.11 - Finding multiples
+
+; First loop of this program push numbers form M to 1 to stack.M is bigger than N, otherwise during the last step
+; popped number will something like 0777BB..., so we risk to enter endless loop L5, because condition cmp eax, N will be corrupted.
+; Second loop first calculates multiples of 2 (2, 4, 6...).EBX is set to 1 from the beginning
+; in order to avoid endless loop L5 and L3.Multiple of 2 put first in array1.Next step : current multiple of 2
+; is compared to M. if equal or bigger, then jge L4 - exit.
+; Next we pop numbers from stack to edx(1 to N).Number in edx is compared to eax.If numbers are not equal,
+; then jump to L5, where we pop next number from stack.If edx is equal to eax, then jmp to L3, where 1 is inserted to
+; corresponding  position in array2.
+
+; stack: M M-1 M-2 ... 3 2 1
+; array1: 02 04 06 08...
+; array2: 0 1 0 1 0 1 0 1...
+
+comment @
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+@
+
+INCLUDE Irvine32.inc
+
+.data
+N = 6
+M = N+2
+array1 byte M dup(0)
+array2 byte M dup(0)
+
+.code
+main PROC
+mov ebx, 1
+mov esi, offset array1
+mov ecx, M
+L1:
+push ecx;					push numbers from M to 1 in stack (in the end esp will point to 1)
+loop L1
+mov ecx, N
+mov edi, offset array2
+L2:
+mov eax, 2
+mul ebx;					mul eax, ebx - obtain all the multiples of 2
+mov[esi], eax;				multiples of 2 are placed to array1
+add esi, type array1
+inc ebx
+L5:
+cmp eax, M;					eax(2, 4, 6, 8...) is compared to N, if eax is equal or greater than M, then jge L4 - exit
+jge L4;						exit
+inc edi
+pop edx;					numbers from N to 1 are popped from stack to edx
+cmp eax, edx;				multiple of 2 currently in eax is compared to number popped from stack to edx
+jne L5;						if numbers are not equal, jump L5
+jz L3;						if numbers are equal, jump L3
+loop L2
+L3:
+mov dl, 1
+mov[edi], dl;				if numbers in eax(multiple of 2) and edx(popped from stack) are equal,
+			;				corresponding element in array2 is turned to 1
+jmp L2
+L4:
+
+; INVOKE ExitProcess, 0
+exit
+main ENDP
+end main
+

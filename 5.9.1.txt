@@ -1,0 +1,33 @@
+; 5.9.1 - Programming exercises - Display the same string in different colours using loop.
+; author proposes to use expression mov eax, color1 + (color2 * 16). It works only without loop.
+; in this program we use expression add eax or add al - add ah. However, we can t predict color.
+
+INCLUDE Irvine32.inc
+
+.data
+string byte "Coloured string", 0
+a dword 4
+
+.code
+main PROC
+
+mov eax, 0
+mov ecx, 4
+L1:
+; add eax, green + (yellow * 16)
+add al, 5h
+add ah, 2h
+call SetTextColor
+call Clrscr
+mov edx, OFFSET string
+call WriteString
+call Crlf
+call Crlf
+call WaitMsg
+loop L1
+
+call Crlf
+exit
+
+main ENDP
+END main

@@ -1,0 +1,29 @@
+; AddVariables.asm - Chapter 3 example.
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+; p. 136 Algorithm workbench, ex. 2 - Using the XCHG instruction no more than three times, reorder the values in four 8-bit registers
+from the order A,B,C,D to B,C,D,A.
+array1 byte 10h, 20h, 30h, 40h
+array2 word 2 dup(0)
+
+.code
+main PROC
+	
+	mov ax, word ptr array1
+	mov bx, word ptr array1+2
+	xchg al, ah
+	xchg ah, bl
+	xchg bl, bh
+	mov array2, ax
+	mov array2+2, bx
+	mov eax, dword ptr array2
+	
+invoke ExitProcess,0
+main endp
+end main

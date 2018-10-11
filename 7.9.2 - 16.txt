@@ -1,0 +1,41 @@
+; 7.10.2 - 16 - Calculate the absolute value of the signed integer
+
+; a mod 2 ^ i = a & (2 ^ i–1)
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+; 1st method for negative numbers
+
+mov eax, -256d
+dec eax
+not eax
+
+; 2nd method for negative numbers
+
+mov eax, -256d
+dec eax
+xor eax, 0FFFFFFFFh
+
+; 3d methode for negative numbers
+
+mov eax, -256d
+mov edx, eax
+sar edx, 31
+xor eax, edx
+inc eax
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

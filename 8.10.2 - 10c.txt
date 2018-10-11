@@ -1,0 +1,45 @@
+; 8.10.2 - 10 - DumpMemory
+
+; INVOKE is used without PROTO
+
+; NB! PROC requires parameter list, push ebp prologue is not allowed
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+	.data
+
+	array1 dword 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+	.code
+	main PROC
+
+	push offset array1
+	push lengthof array1
+	push type array1
+	call DumpMemory
+
+	; invoke ExitProcess, 0
+	exit
+	main ENDP
+
+	DumpMemory proc uses esi ecx ebx,
+	val1: dword,
+	val2 : dword,
+	val3 : dword
+	mov esi, val3; [ebp + 16]
+	mov ecx, val2; [ebp + 12]
+	mov ebx, val1; [ebp + 8]
+	call DumpMem
+	call Crlf
+	call Crlf
+	ret
+	DumpMemory endp
+
+	invoke DumpMemory, type array1, lengthof array1, addr array1
+
+	END main

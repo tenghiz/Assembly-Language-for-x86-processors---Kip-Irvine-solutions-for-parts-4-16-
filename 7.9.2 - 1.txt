@@ -1,0 +1,52 @@
+; 7.9.2 - 1 - AX is sign - extended to EAX
+; this program don t use any shift instruction for sign - extension
+; In the first part we check whether the upper bit is 1 or 0
+; if 1, then we perform following trick
+; EAX is filled with FFFFFFFFh, then AX is filled with initial value
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+val1 word 1001100110011001b
+val2 dword 0
+
+.code
+main PROC
+
+; this part checks whether upper bit is 1 or 0
+mov eax, 0
+mov ax, val1
+shl ax, 1
+jc L1
+jmp L2
+
+; if upper bit is 1, then EAX is first filled with FFFFFFFFh,
+; then AX is filled with initial value
+L1:
+mov eax, 0
+dec eax
+mov ax, val1
+mov val2, eax
+jmp L3
+
+; if upper bit is 0, then EAX is filled with 00000000h,
+;then AX is filled with initial value
+L2:
+mov eax, 0
+mov ax, val1
+mov val2, eax
+
+L3:
+
+invoke ExitProcess, 0
+main ENDP
+
+; exit
+
+END main

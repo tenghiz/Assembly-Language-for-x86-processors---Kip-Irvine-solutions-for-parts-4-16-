@@ -1,0 +1,62 @@
+; 8.11 - 4 - FindThrees Procedure
+
+;PROC directive + parameter list + USES
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+array1 dword 1, 2, 3, 2, 3, 3, 3, 3, 3, 2, 3, 1
+
+.code
+main PROC
+
+push offset array1
+push lengthof array1
+
+call FindThrees
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+FindThrees proc uses ebx ecx edx esi,
+val1:dword,
+val2 : dword
+mov esi, val2; [ebp + 12]
+mov ecx, val1; [ebp + 8]
+L1:; ------------------------------------ -
+push ecx
+mov eax, esi
+mov ecx, 3
+mov edx, 0
+L2 :; -------------------------- -
+mov ebx, [eax]
+cmp ebx, 3; this is important condition, otherwise sequence like 2,3,4 or 1,1,7 will be also counted
+jne L4
+add edx, ebx
+add eax, type array1
+loop L2;--------------------------
+L4:
+pop ecx; immediately after the inner loop, otherwise ecx will be set to 0
+cmp edx, 9
+je L3
+add esi, type array1
+loop L1;-------------------------------------
+L3:
+mov eax, val1; [ebp + 8]
+sub eax, ecx
+inc eax
+call WriteDec; prints the position of sequence in array
+ret
+FindThrees endp
+
+END main

@@ -1,0 +1,27 @@
+; AddVariables.asm - Chapter 3 example.
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+; p. 136 Algorithm workbench, ex. 8 - Write a loop that iterates through a doubleword array and calculates the sum of its elements
+using a scale factor with indexed addressing.
+array1 dword 100h, 200h, 300h, 400h
+
+.code
+main PROC
+	
+mov eax, 0
+mov ecx, lengthof array1
+mov esi, offset array1
+L1:
+add eax, [esi]
+add esi, type array1
+loop L1
+	
+invoke ExitProcess,0
+main endp
+end main

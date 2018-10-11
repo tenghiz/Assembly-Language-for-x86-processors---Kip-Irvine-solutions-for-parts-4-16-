@@ -1,0 +1,32 @@
+; AddVariables.asm - Chapter 3 example.
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+; p. 136 Programming exercises, ex. 6 - Reverse an Array
+
+array1 byte 10h, 20h, 30h, 40h, 50h, 60h
+
+.code
+main PROC
+
+mov esi, offset array1
+mov edi, offset array1 + lengthof array1-type array1
+mov ecx, lengthof array1 / 2
+L1:
+mov al, [esi]
+mov bl, [edi]
+xchg al, bl
+mov [esi], al
+mov [edi], bl
+add esi, type array1
+sub edi, type array1
+loop L1
+
+invoke ExitProcess,0
+main endp
+end main

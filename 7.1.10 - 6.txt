@@ -1,0 +1,58 @@
+; 7.1.10 - 6 - Count parity
+; program counts first all binary 1 in hex number, counter is ebx
+; in the end ebx will contain even number(even parity) or odd number(odd parity)
+; the easiest way to distinguish even and odd numebrs is to check their LSB
+; LSB = 0, even number; LSB = 1, odd number.Program checks LSB using shr command
+; there is no direct way to set parity flag
+; so we perform XOR operation between some aleatory numbers and 0 to set parity flag accordingly to carry flag
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+;this section counts all 1 using ebx as counter
+
+mov eax, 0
+mov ebx, 0
+mov al, 78h
+mov ecx, 8
+L1:
+shl al, 1
+jnc L2
+inc ebx
+L2:
+loop L1
+
+; this section checks first LSB of ebx
+; if it is 1, then ebx contains odd number(odd parity)
+; if it is 0, then ebx contains even number
+
+;parity flag is set performing XOR between some aleatory even bit number and 0
+
+clc
+shr ebx, 1
+jnc L3
+mov al, 11001100b; 4 bits = even parity
+xor al, 0
+jmp L4
+
+L3:
+mov al, 10110101b; 5 bits = odd parity
+xor al, 0
+
+L4:
+
+invoke ExitProcess, 0
+
+; exit
+main ENDP
+
+END main

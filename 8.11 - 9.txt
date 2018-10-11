@@ -1,0 +1,102 @@
+; 8.11 - 9 - Counting NEARLY matching elements
+
+; Program counts nearly matching elements in 2 arrays.
+; Allowed difference is indicated by parameter DIFF.
+
+; Little improvement : program shows also positions of matching elements.
+; This part is little bit tricky.Position of element can be deducted from current ECX value:
+; array3 holds the positions of nearly matching elements.
+; Pointer to array3 is passed to EDX.
+;Unfortunately ASM doesn t allow following expression:
+; mov[edx], lengthof array1
+; sub[edx], ecx
+; To overcome this obstacle, array3 is filled with lengthof array1 from the beginning,
+; then the value of ecx is substracted from[edx].
+;Finally all elements excepting lengthof array1 are printed.
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+CountMatch proto,
+OffsArr1 : dword,
+OffsArr2 : dword,
+OffsArr3:dword,
+LengthArra1 : dword,
+diff:dword
+
+.data
+
+array1 dword 1,2,3,4,5,6,7,8,9
+array2 dword 9,9,7,7,5,5,3,3,1
+array2length = ($- array2)/type array2
+array3 dword array2length dup (array2length)
+
+.code
+main PROC
+
+invoke CountMatch, addr array1, addr array2, addr array3, lengthof array1, 2
+
+call WriteDec
+
+call Crlf
+
+call PrintPosition
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+CountMatch proc uses esi edi ecx ebx edx,
+OffsArr1: dword,
+OffsArr2: dword,
+OffsArr3 : dword,
+LengthArra1: dword,
+diff:dword
+mov esi, OffsArr1
+mov edi, OffsArr2
+mov edx, OffsArr3
+mov ecx, LengthArra1
+mov eax, 0
+L1:
+mov ebx, [esi]
+cmp ebx, [edi]
+ja L3
+xchg ebx, [edi]
+L3:
+sub ebx, [edi]
+cmp ebx, diff
+ja L2
+inc eax
+sub [edx], ecx
+L2:
+add esi, type array1
+add edi, type array2
+add edx, type array3
+loop L1
+ret
+CountMatch endp
+
+PrintPosition proc
+mov esi, offset array3
+mov ecx, lengthof array3
+L5 :
+mov eax, [esi]
+cmp eax, array2length
+je L6
+call WriteDec
+mov al, ','
+call WriteChar
+L6 :
+add esi, type array3
+loop L5
+ret
+PrintPosition endp
+
+END main

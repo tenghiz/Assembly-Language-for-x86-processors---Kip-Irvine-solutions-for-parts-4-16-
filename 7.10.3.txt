@@ -1,0 +1,51 @@
+; 7.10.3 - transform 4 - byte packed decimal to a string of ASCII digits
+; we use SHLD instruction with count 4 which permits to separate each hexadecimal digit
+; and transform it to ASCII applying OR 30h mask
+
+; for unknown reason this instruction doesn t allow to shift the lowest nibble
+; shld eax, ebx, 32. doesn t work
+; so, if packed BCD is 12345678h, it will be shown as 12345677
+
+;this problem was bypassed applying OR 30h mask separately on the lowest nibble
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+val1 dword 12345678h
+
+.code
+main PROC
+
+mov ebx, val1
+mov eax, 0
+mov ecx, 7
+mov edx, 4
+L1:
+push ecx
+mov cl, dl
+shld eax, ebx, cl
+and al, 0Fh
+or al, 30h
+call WriteChar
+add edx, 4
+pop ecx
+loop L1
+
+mov eax, val1
+and al, 0Fh
+or al, 30h
+call WriteChar
+
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

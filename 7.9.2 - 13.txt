@@ -1,0 +1,81 @@
+; 7.9.2 - 13 - display 8 - bit value in decimal format
+; USE ONLY WriteChar
+
+; in order to transform any hexadeciaml number to decimal,
+; you should divide it by 10 (0Ah)
+; quotient is tens, reminder is units
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+units byte 0
+tens byte 0
+hundreds byte 0
+
+prompt BYTE "Please enter any hexadecimal number from 0 to 0FFh: ", 0
+prompt1 BYTE "Here is corresponding decimal value: ", 0
+
+.code
+main PROC
+
+mov edx, OFFSET prompt
+call WriteString
+
+call ReadHex
+
+call Crlf
+
+mov ecx, 0Ah
+
+; this part divides the number in AL by 10 (0Ah)
+; quotient in AL is tens, reminder in AH is units
+
+div cl
+mov tens, al
+mov units, ah
+
+; this part checks whether the value in tens is more than 9
+; if it is the case, then the value is divided by 10
+;quotient goes to hundreds, reminder goes to tens
+
+cmp tens, 9
+jbe L1
+mov eax, 0
+mov al, tens
+div cl
+mov hundreds, al
+mov tens, ah
+
+L1:
+
+mov edx, OFFSET prompt1
+call WriteString
+
+; this part displays decimal value
+; before displaying, the value in AL should be transfromed to corresponding ASCII char
+;'01' = 31h, '09' = 39h, etc
+
+mov al, hundreds
+or al, 030h
+call WriteChar
+mov al, tens
+or al, 030h
+call WriteChar
+mov al, units
+or al, 030h
+call WriteChar
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

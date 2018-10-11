@@ -1,0 +1,42 @@
+; 7.9.2 - 2 - rotate the content of AL 1 bit to the right
+;without using rotate instruction
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+val1 byte 10011001b
+val2 byte 0
+
+.code
+main PROC
+
+mov eax, 0
+mov al, val1
+shr al, 1
+jc L1
+jmp L2
+
+L1:
+mov al, val1
+sar al, 1
+jmp L3
+
+L2:
+mov al, val1
+shr al, 1
+
+L3:
+mov val2, al
+
+invoke ExitProcess, 0
+main ENDP
+
+; exit
+
+END main

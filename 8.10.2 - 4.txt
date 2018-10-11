@@ -1,0 +1,41 @@
+; 8.10.2 - 4
+; create local variable which is an array of bytes
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+arr byte 1, 2, 3, 4, 5, 6, 7, 8, 9
+sizeOfArr = ($ - arr)
+
+.code
+main PROC
+
+mov edi, offset arr
+call AddThree
+
+invoke ExitProcess, 0
+; exit
+main ENDP
+
+AddThree proc
+local buffer[sizeOfArr]:byte
+lea esi, [ebp-1]
+mov ecx, sizeOfArr
+L1:
+mov al, [edi]
+mov [esi], al
+dec esi
+inc edi
+loop L1
+mov al, buffer
+mov bl, [buffer+8]
+ret
+AddThree endp
+
+END main

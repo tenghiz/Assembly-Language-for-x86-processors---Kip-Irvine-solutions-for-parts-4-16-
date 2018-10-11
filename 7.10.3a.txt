@@ -1,0 +1,39 @@
+; 7.10.3 - transform 4 - byte packed decimal to a string of ASCII digits
+; we use ROL instruction with count 4 which permits to separate each hexadecimal digit
+; and transform it to ASCII applying OR 30h mask
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+val1 dword 12345678h
+
+.code
+main PROC
+
+mov ecx, 8
+mov edx, 4
+L1:
+push ecx
+mov eax, val1
+mov cl, dl
+rol eax, cl
+and al, 0Fh
+or al, 30h
+call WriteChar
+add edx, 4
+pop ecx
+loop L1
+
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

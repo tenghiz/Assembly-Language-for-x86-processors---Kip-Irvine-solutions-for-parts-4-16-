@@ -1,0 +1,82 @@
+; 6.11.2 - 9 - Validating pin number
+
+; user is asked to enter some 5 - digit pin number
+; each digit is compared to a range of specified values(lower value is in array1, upper in array2)
+; array1 byte 5, 2, 4, 1, 3
+; array2 byte 9, 5, 8, 4, 6
+; We merge these arrays to array3, in which [array3] is a lower value, [array3+1] is upper value of range
+
+; The main subtlety of this program is that we use ReadString subroutine to save digits in memory
+; It means that number 1 is stored as hexadecimal value 31 and not as hexadecimal 1
+; Fortunately each string digit can be easely transformed to hexadecimal digit applying a mask
+; String 1 = 31hex = 0011 0001b...String 9 = 39hex = 0011 1001b
+; to erase upper nibble of byte use AND mask ---> and 0011 0001b, 0000 1111b
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+prompt BYTE "Enter your pin number: ", 0
+prompt1 BYTE "Invalid pin number!", 0
+prompt2 BYTE "Valid pin number: ", 0
+
+array3 byte 5, 9, 2, 5, 4, 8, 1, 4, 3, 6
+pin byte 6 dup(0)
+
+.code
+main PROC
+
+mov edx, OFFSET prompt
+call WriteString
+
+mov edx, offset pin
+mov ecx, sizeof pin
+call ReadString
+
+call Crlf
+call Crlf
+
+mov esi, offset pin
+mov edi, offset array3
+mov ecx, lengthof pin -1
+L1:
+mov al, [esi]
+and al, 00001111b
+mov bl, [edi]
+cmp al, bl
+jb L2
+mov bl, [edi+1]
+cmp al, bl
+ja L2
+inc esi
+add edi, 2
+loop L1
+
+mov edx, OFFSET prompt2
+call WriteString
+call Crlf
+call Crlf
+
+mov edx, offset pin
+call WriteString
+
+jmp L3
+
+L2 :
+mov edx, OFFSET prompt1
+call WriteString
+
+L3:
+call Crlf
+call Crlf
+
+exit
+main ENDP
+
+; invoke ExitProcess, 0
+END main

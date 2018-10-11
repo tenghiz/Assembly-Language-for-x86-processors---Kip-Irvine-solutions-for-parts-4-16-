@@ -1,0 +1,45 @@
+; 6.10.2 - 10
+; while N > 0
+; if N != 3 AND(N < A OR N > B)
+; N = N – 2
+; else
+; N = N – 1
+; end whle
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+A dword 9
+B dword 2
+N dword 1
+
+.code
+main proc
+
+mov eax, A
+mov ebx, B
+mov ecx, N
+L1 :
+cmp ecx, 0
+jle L3; checks whether ECX = 0, jumps to exit
+cmp ecx, 3
+je L2
+cmp ecx, eax
+jb L4
+cmp ecx, ebx
+ja L4
+jmp L2
+L4:
+sub ecx, 2
+jmp L1
+L2:
+dec ecx
+jmp L1
+L3:
+
+	invoke ExitProcess,0
+main endp
+end main

@@ -1,0 +1,30 @@
+; 9.9.2 - 3
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+array1 dword 1, 2, 3, 4
+rowsize = ($ - array1)
+dword 5, 6, 7, 8
+dword 9, 10, 11, 12
+
+.code
+main PROC
+
+mov ebx, offset array1
+mov edi, rowsize * 2; row
+add ebx, edi; otherwise expression [ebx+edi+esi] is not allowed
+mov esi, 2; column
+mov eax, [ebx+esi*type array1]
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

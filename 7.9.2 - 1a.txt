@@ -1,0 +1,28 @@
+; 7.9.2 - 1 - AX is sign - extended to EAX
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+val1 word 1001100110011001b
+val2 dword 0
+
+.code
+main PROC
+
+mov eax, 0
+mov ax, val1
+ror eax, 16; rotate bits to the right
+sar eax, 16; sign-extend bits to the right
+
+invoke ExitProcess, 0
+main ENDP
+
+; exit
+
+END main

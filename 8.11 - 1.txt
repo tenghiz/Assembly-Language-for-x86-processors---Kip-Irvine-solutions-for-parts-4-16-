@@ -1,0 +1,67 @@
+; 8.11 - 1 - FindLargest
+
+; Algorithm:
+; Each value is compared to all members of array.
+; If a given value is lower than some member of an array,
+; than value is switched to next member, which in its turn also compared to all members of array.
+; If a given value is bigger than all compared members, than comparison is finished.
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+FindLargest proto,
+val1 : sdword,
+val2 : dword
+
+.data
+
+array1 sdword 99, 1, 12, 3, -3, 99, 40, 5, -5, 7, 9
+
+.code
+main PROC
+
+invoke FindLargest,
+addr array1,
+lengthof array1
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+FindLargest proc,
+val1: sdword,
+val2 : dword
+
+mov esi, val1; value which will be compared to all members of array
+mov ecx, val2
+L1 :
+mov edi, val1; copy of array which is used to evaluate the current value in eax
+mov eax, [esi]
+mov edx, 0; counter for comparing loop, if edx = lengthof array, than jmp L4
+L3:
+cmp edx, lengthof array1; if counter of comparing loop is finished, then jmp L4
+je L4
+mov ebx, [edi]
+cmp eax, ebx; current value is compared to all members of array
+jl L2; if current value is lower than some element of array, then switch to next value
+inc edx
+add edi, type array1
+jmp L3
+L2 :
+add esi, type array1
+loop L1
+
+L4 :
+call WriteInt
+
+call Crlf
+call Crlf
+	
+ret
+FindLargest endp
+
+END main

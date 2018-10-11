@@ -1,0 +1,60 @@
+; 8.10.2 - 11
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+DumpMemory proto,
+val1 : dword,
+val2 : dword,
+val3 : dword,
+val4 : dword,
+val5 : dword,
+val6 : dword
+
+	.data
+
+	array1 dword 1, 3, 5, 7, 9
+	array2 dword 2, 4, 6, 8
+
+	.code
+	main PROC
+
+	invoke DumpMemory, 
+	addr array1, 
+	lengthof array1, 
+	type array1,
+	addr array2, 
+	lengthof array1,
+	type array2
+
+	; invoke ExitProcess, 0
+	exit
+	main ENDP
+
+	DumpMemory proc,
+	val1: dword,
+	val2 : dword,
+	val3 : dword,
+	val4: dword,
+	val5:dword,
+	val6:dword
+	mov esi, val1
+	mov ecx, val2
+	mov ebx, val3
+	call DumpMem
+	call Crlf
+	call Crlf
+	mov esi, val4
+	mov ecx, val5
+	mov ebx, val6
+	call DumpMem
+	call Crlf
+	call Crlf
+	ret
+	DumpMemory endp
+
+	END main

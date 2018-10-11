@@ -1,0 +1,56 @@
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+comment @
+INCLUDE Irvine32.inc
+@
+
+.data
+letters byte 'R', 'r', 'd', 'D', 0
+letters1 byte 10 dup(0)
+
+.code
+main PROC
+
+; clears low 8 bits in AX and doesn t change the high 8 bits
+mov ax, 1234h
+and ax, 1111111100000000b
+
+; clears high 8 bits in AX and doesn t change the low 8 bits
+mov ax, 1234h
+and ax, 11111111b
+
+; set high 8 bits in AX and doesn t change the low 8 bits
+mov ax, 1234h
+or ax, 1111111100000000b
+
+; reverse all the bits in EAX
+mov eax, 11111111000000001111111100000000b
+xor eax, 11111111111111111111111111111111b
+
+; clear zero flag if value is odd
+mov eax, 11111111111111111111111111111111b
+test eax, 1b
+
+; set zero flag if value is even
+mov eax, 11111111111111111111111111111110b
+test eax, 1b
+
+;converts uppercase to lowercase, if already lowercase then discard change
+mov esi, offset letters
+mov edi, offset letters1
+mov ecx, lengthof letters
+L1:
+mov al, [esi]
+or al, 00100000b
+mov [edi], al
+inc esi
+inc edi
+loop L1
+
+INVOKE ExitProcess, 0
+; exit
+main ENDP
+end main

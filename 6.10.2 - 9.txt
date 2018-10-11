@@ -1,0 +1,41 @@
+; 6.10.2 - 9 - if (ebx > ecx AND ebx > edx) OR(edx > eax)
+; X = 1
+; else
+; X = 2
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+var1 dword 998h
+
+.code
+main proc
+
+mov eax, 1
+mov edx, 2
+mov ecx, 3
+mov ebx, 4
+cmp ebx, ecx
+ja L1
+jbe L2
+L1:
+cmp ebx, edx
+ja L3
+jbe L2
+L2:
+cmp edx, eax
+ja L3
+jmp L4
+L3:
+mov esi, 1
+jmp L5
+L4:
+mov esi, 2
+L5:
+
+	invoke ExitProcess,0
+main endp
+end main

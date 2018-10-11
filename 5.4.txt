@@ -1,0 +1,50 @@
+; 5.4.5 section - a program which converts a decimal to hexadecimal and binary
+
+include Irvine32.inc
+
+.data
+prompt BYTE "Enter a 32-bit signed integer: ", 0
+prompt1 BYTE "Display in signed decimal: ", 0
+prompt2 BYTE "Display in hexadecimal: ", 0
+prompt3 BYTE "Display in binary: ", 0
+
+.code
+main PROC
+
+; this section prints PROMPT message
+mov edx, OFFSET prompt
+call WriteString
+
+; this section read users input
+call ReadInt; input integer into EAX
+call Crlf
+
+;this section prints PROMPT1 message and displays users input in signed decimal
+mov edx, OFFSET prompt1
+call WriteString
+call Crlf
+call WriteInt
+call Crlf
+call Crlf
+
+; this section prints PROMPT2 message and displays users input in hexadecimal
+mov edx, OFFSET prompt2
+call WriteString
+call Crlf
+call WriteHex
+call Crlf
+call Crlf
+
+; this section prints PROMPT3 message and displays users input in binary
+mov edx, OFFSET prompt3
+call WriteString
+call Crlf
+call WriteBin
+call Crlf
+call Crlf
+
+call WaitMsg
+call Crlf
+exit
+main ENDP
+END main

@@ -1,0 +1,57 @@
+; 8.10.2 - 8 - Set color
+
+; color attributes are stored in AL
+; Upper nibble of AL is foreground;
+; Lower nibble of AL is background;
+
+; The question is : how to stick together two different elements in AL ?
+; Textbook propose to mov al background, shl 4 and then OR foreground:
+; mov al, 1101b(lightred) == al = 00001101b
+; shl al, 4 == al = 11010000b
+; mov bl, 1011b(lightblue)
+; or al, bl == al = 110110011b
+
+;Procedure described here proposes another slightly different approach
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+lightred = 1101b
+lightblue = 1011b
+color1 = 11011011b
+; color = white + (blue * 16)
+
+.code
+main PROC
+
+push lightred
+push lightblue
+; push color1
+call AddThree
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+AddThree proc
+push ebp
+mov ebp, esp
+mov eax, 0
+mov al, [ebp + 8]
+mov ah, [ebp + 12]
+shl al, 4
+shr eax, 4
+call SetTextColor
+call Clrscr
+mov esp, ebp
+pop ebp
+ret
+AddThree endp
+
+END main

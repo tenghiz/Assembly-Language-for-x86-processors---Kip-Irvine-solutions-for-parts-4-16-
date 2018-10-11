@@ -1,0 +1,40 @@
+; 5.9.7 - Random Screen Locations
+
+comment @
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+@
+
+INCLUDE Irvine32.inc
+
+.data
+char1 byte 'a'
+
+.code
+main PROC
+
+mov ecx, 30
+L1:
+mov eax, 23
+call RandomRange
+mov dh, al
+mov eax, 78
+call RandomRange
+mov dl, al
+call Gotoxy
+mov al, char1
+call WriteChar
+call Crlf
+mov eax, 1000
+call Delay
+call Clrscr
+loop L1
+
+exit
+
+; INVOKE ExitProcess, 0
+
+main ENDP
+END main

@@ -1,0 +1,50 @@
+; 8.10.2 - 9 - Create a procedure named WriteColorChar
+; that receives three stack parameters : char,
+; forecolor, and backcolor.
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+lightred = 1101b
+lightblue = 1011b
+char1 byte 'z'
+
+.code
+main PROC
+
+push lightred
+push lightblue
+push offset char1
+call WriteColorChar
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+WriteColorChar proc
+push ebp
+mov ebp, esp
+mov eax, 0
+mov al, [ebp + 16]
+mov ah, [ebp + 12]
+shl al, 4
+shr eax, 4
+call SetTextColor
+call Clrscr
+mov esi, [ebp + 8]
+mov al, [esi]
+call WriteChar
+call Crlf
+call Crlf
+mov esp, ebp
+pop ebp
+ret
+WriteColorChar endp
+
+END main

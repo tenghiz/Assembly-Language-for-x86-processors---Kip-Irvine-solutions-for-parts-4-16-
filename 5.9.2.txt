@@ -1,0 +1,67 @@
+; INCLUDE Irvine32.inc
+
+;5.9.2. - Linking array items
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+chars byte 'B', 'A', 'C'
+links dword 2, 1, 3
+chars1 byte 3 dup(0)
+links1 dword 3 dup(0)
+
+.code
+main PROC
+
+mov ebx, esp
+
+mov esi, 0
+mov edx, offset links
+mov ecx, lengthof chars
+L1:
+movzx eax, chars[esi]
+push eax
+push [edx]
+inc esi
+add edx, type links
+loop L1
+
+mov esi, offset chars1
+mov edx, offset links1
+
+add esp, 3*type dword
+pop eax
+mov [esi], al
+sub esp, 2*type dword
+pop eax
+mov [edx], eax
+
+inc esi
+add edx, type dword
+
+add esp, 2*type dword
+pop eax
+mov[esi], al
+sub esp, 2*type dword
+pop eax
+mov[edx], eax
+
+inc esi
+add edx, type dword
+
+sub esp, 4*type dword
+pop eax
+mov[esi], al
+sub esp, 2 * type dword
+pop eax
+mov[edx], eax
+
+mov esp, ebx
+; exit
+
+INVOKE ExitProcess, 0
+main ENDP
+END main

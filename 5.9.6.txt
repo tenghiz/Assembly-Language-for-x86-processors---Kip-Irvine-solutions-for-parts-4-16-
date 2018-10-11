@@ -1,0 +1,84 @@
+; 5.9.6 - Random uppercase string
+
+comment @
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+@
+
+INCLUDE Irvine32.inc
+
+.data
+string byte 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'; source of letters
+string1 byte 10 dup(0)
+
+.code
+main PROC
+
+; we will manipulate the value of esp later
+;we return this value back to esp just before the exit
+mov edi, esp
+
+; this block push all the letters from source to stack
+
+mov esi, 0
+mov ecx, lengthof string
+L1 :
+movzx eax, string[esi]
+push eax
+inc esi
+loop L1
+
+; this block generates some number in range between 0 and number of letters of stack.
+; It will determine the lenghth of random string1
+
+mov eax, 10; number of letters in stack
+call RandomRange
+
+mov ebx, esp; later we will manipulate esp value, that s why we have to save the value of esp
+
+mov ecx, eax
+mov esi, 0
+L2:
+mov esp, ebx; value of esp points to the top of letters in stack
+mov eax, 10; here we choose randomly some letter from stack
+call RandomRange
+mov edx, type dword
+mul edx; multiplication is actually eax*edx, but eax is never mentioned
+add esp, eax; now esp points to random letter in stack
+pop eax
+sub eax, 32; popped letter is in lower case.Difference between upper and lower case in ASCII is 32
+mov string1[esi], al; letter in string1 is in upper case
+inc esi
+loop L2
+
+mov esp, edi
+
+exit
+
+; INVOKE ExitProcess, 0
+
+main ENDP
+
+; we could create a procedure to debug this program faster.
+; PushStack proc works well, but some unknown error is generated later, precisely eax gets in L2 some strane values.
+; Thus we prefer to work without supplementary procedures
+
+comment @
+PushStack proc
+mov ebx, esp; we have to save esp value before implementing push command
+mov esi, 0
+mov ecx, lengthof string
+L1:
+movzx eax, string[esi]
+push eax
+inc esi
+loop L1
+mov edx, esp; here edx will point to the top of letters in stack
+mov esp, ebx; now esp points to return address of procedure
+ret
+PushStack endp
+@
+
+END main

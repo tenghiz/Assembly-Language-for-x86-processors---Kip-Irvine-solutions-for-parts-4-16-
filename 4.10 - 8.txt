@@ -1,0 +1,31 @@
+; AddVariables.asm - Chapter 3 example.
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+; p. 136 Programming exercises, ex. 8 - Shifting the Elements in an Array
+
+array1 dword 10h, 20h, 30h, 40h, 50h, 60h
+
+.code
+main PROC
+
+mov esi, offset array1
+mov edi, offset array1 + type array1
+mov eax, [esi]
+mov ecx, lengthof array1 - 1
+L1:
+mov ebx, [edi]
+xchg ebx, eax
+mov[edi], ebx
+add edi, type array1
+loop L1
+mov array1, eax
+
+invoke ExitProcess,0
+main endp
+end main

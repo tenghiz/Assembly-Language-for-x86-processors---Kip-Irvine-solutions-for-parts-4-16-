@@ -1,0 +1,54 @@
+; 8.11 - 8 - Counting matching elements
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+CountMatch proto,
+OffsArr1 : dword,
+OffsArr2 : dword,
+LengthArra1 : dword
+
+.data
+
+array1 dword 1,2,3,4,5,6,7,8,9,0
+array2 dword 9,8,7,6,5,4,3,2,1,0
+
+.code
+main PROC
+
+invoke CountMatch, addr array1, addr array2, lengthof array1
+
+call WriteDec
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+CountMatch proc,
+OffsArr1: dword,
+OffsArr2: dword,
+LengthArra1: dword
+mov esi, OffsArr1
+mov edi, OffsArr2
+mov ecx, LengthArra1
+mov eax, 0
+L1:
+mov ebx, [esi]
+cmp ebx, [edi]
+jne L2
+inc eax
+L2:
+add esi, type array1
+add edi, type array2
+loop L1
+ret
+CountMatch endp
+
+END main

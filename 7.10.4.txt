@@ -1,0 +1,103 @@
+; 7.10.4 - encryption using rotation operator
+
+; the first trick of this program is a lenghth of KEY
+; separate counter should be set for KEY
+; if counter exceeds the length of KEY, set counter and KEY itself to 0
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+message byte "Ich würde gerne diese Nachricht verschlüsseln", 0
+size_message = ($ - message) - 1
+key BYTE - 2, 4, 1, 0, -3, 5, 2, -4, -4, 6
+key_size = ($ - key)
+encrypt_msg byte size_message + 1 dup(0)
+decrypt_msg byte size_message + 1 dup(0)
+
+.code
+main PROC
+
+mov edx, OFFSET message
+call WriteString
+call Crlf
+
+;this block encrypts message
+
+mov esi, offset message
+mov ecx, size_message
+mov edx, offset encrypt_msg
+L4:
+mov eax, 0; this is a counter for KEY
+mov edi, offset key
+L1:
+push ecx; save ecx, because CL is used to count number of rotations
+cmp eax, key_size; compare KEY counter, if equal to KEY, jump L4, set counter to 0 and KEY to beginning
+je L4
+mov cl, [edi]; unfortunately rotation doesn t work with pointers
+mov bl, [esi]
+cmp cl, 0; if KEY value in CL is negative, then L2 and rotate to the left
+jl L2
+ror bl, cl
+jmp L3
+L2:
+rol bl, cl
+L3:
+mov[edx], bl
+inc esi
+inc edi
+inc edx
+inc eax
+pop ecx
+loop L1
+
+mov edx, OFFSET encrypt_msg
+call WriteString
+
+call Crlf
+
+; this block decrypts message
+;ROR should be changed to ROL and vice versa
+
+mov esi, offset encrypt_msg
+mov ecx, size_message
+mov edx, offset decrypt_msg
+L5 :
+mov eax, 0
+mov edi, offset key
+L6 :
+push ecx
+cmp eax, key_size
+je L5
+mov cl, [edi]
+mov bl, [esi]
+cmp cl, 0
+jl L7
+rol bl, cl
+jmp L8
+L7 :
+ror bl, cl
+L8 :
+mov[edx], bl
+inc esi
+inc edi
+inc edx
+inc eax
+pop ecx
+loop L6
+
+mov edx, OFFSET decrypt_msg
+call WriteString
+
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

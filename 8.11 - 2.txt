@@ -1,0 +1,119 @@
+; 8.11 - 2 - Chess table
+
+; This is horrible and non - optimized program, which draws chess table.
+
+;Algorithm:
+; The core of program is block, which draws 6 'spaces' (20h);
+; The block of 6 spaces is repeated 8 times, alternating the color.
+; The color is regulated by position of block:
+; If it is odd, then the color is grey, otherwise the color is white.
+; Next, this stripped line is drawn 3 times to form an area, consisting of white and grey squares.
+
+; This algorithm is repeated for next area, in which the color regulation is changed:
+; If odd positions get white color, otherwise the color is grey.
+
+; Final loop draws 8 areas with alternating color.
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mov edi, 8
+L7:
+cmp edi, 0
+je L10
+mov edx, edi
+shr edx, 1
+push edi
+jc L8
+
+mov ecx, 3
+L6:
+push ecx
+mov ecx, 8
+L4:
+mov ebx, ecx
+push ecx
+
+clc
+shr ebx, 1
+jnc L2
+mov eax, 070h
+jmp L3
+L2 :
+mov eax, 0F0h
+jmp L3
+
+L3 :
+call SetTextColor
+
+mov ecx, 6
+L5 :
+mov al, 20h
+call WriteChar
+loop L5
+
+pop ecx
+loop L4
+call Crlf
+pop ecx
+loop L6
+
+jmp L9
+
+L8:
+
+mov ecx, 3
+L61:
+push ecx
+mov ecx, 8
+L41 :
+mov ebx, ecx
+push ecx
+
+clc
+shr ebx, 1
+jc L21
+mov eax, 070h
+jmp L31
+L21 :
+mov eax, 0F0h
+jmp L31
+
+L31 :
+call SetTextColor
+
+mov ecx, 6
+L51 :
+mov al, 20h
+call WriteChar
+loop L51
+
+pop ecx
+loop L41
+call Crlf
+pop ecx
+loop L61
+
+L9:
+pop edi
+dec edi
+jmp L7
+
+L10:
+
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main

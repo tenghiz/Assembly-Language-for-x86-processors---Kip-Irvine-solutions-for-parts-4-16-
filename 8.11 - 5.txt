@@ -1,0 +1,55 @@
+; 8.11 - 5 - DifferentInputs Procedure
+
+; 1st step : A is compared to B and to C;
+; 2nd step : B is compared to C.
+
+; If all values are different, then eax = 1, otherwise 0.
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+DifferentInputs proto,
+val1 : dword,
+val2 : dword,
+val3 : dword
+
+.data
+
+.code
+main PROC
+
+; push 6
+; push 7
+; push 8
+
+invoke DifferentInputs, 6, 7, 8
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+DifferentInputs proc,
+val1:dword,
+val2 : dword,
+val3:dword
+mov eax, val1
+cmp eax, val2
+je L1
+cmp eax, val3
+je L1
+mov eax, val2
+cmp eax, val3
+je L1
+mov eax, 1
+jmp L2
+L1:
+mov eax, 0
+L2:
+ret
+DifferentInputs endp
+
+END main

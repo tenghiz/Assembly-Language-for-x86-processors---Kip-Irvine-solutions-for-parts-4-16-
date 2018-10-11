@@ -1,0 +1,108 @@
+; 8.11 - 3 - Blinking chess table
+
+; Chess table is composed of 8 rows and 8 columns.
+; Each square is formed by printing 2 "spaces" (ASCII 020h).
+
+; Algorithm:
+; First loop prints a line composed of 8 alternating squares of blinking color and squares of fixed white color.
+; Alternation of squares depends on loop counter:
+; when ECX is odd, then square 1 is printed, otherwise square 2 is printed.
+; This alternation is regulated by SetColor1 / 2 proc.
+
+; Second loop prints 8 rows.
+; Since it s a chess table, sequence of colors in lower row is reversed compared to upper row.
+; This alternation depends on DH(vertical component of Gotoxy subroutine) :
+; When DH is odd, SetColor1 subroutine prints sequence 1 of colors,
+; otherwise SetColor2 prints sequence 2 of colors.
+; Both SetColor 1 and 2 are called from inner loop.
+
+;Outer loop is responsible for blinking.
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mov ecx, 0Eh
+L5 :
+mov ebx, ecx
+shl ebx, 4
+push ecx
+mov ecx, 8
+mov dh, 0
+L6 : ;--------------------------------------
+movzx esi, dh
+push ecx
+mov dl, 0
+mov ecx, 8
+L1 : ;-----------------------------
+call Gotoxy
+mov edi, esi
+clc
+shr edi, 1
+jc L20
+call SetColor1
+jmp L30
+L20:
+call SetColor2
+L30:
+mov al, 20h
+call WriteChar
+mov al, 20h
+call WriteChar
+add dl, 2
+loop L1; --------------------------
+pop ecx
+inc dh
+loop L6;-------------------------------------
+pop ecx
+mov eax, 500
+call Delay
+loop L5
+
+call Crlf
+call Crlf
+
+mov eax, 0Fh
+call SetTextColor
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+SetColor1 proc
+mov eax, ecx
+clc
+shr al, 1
+jc L2
+mov eax, ebx
+jmp L3
+L2 :
+mov eax, 0F0h
+L3 :
+call SetTextColor
+ret
+SetColor1 endp
+
+SetColor2 proc
+mov eax, ecx
+clc
+shr al, 1
+jnc L21
+mov eax, ebx
+jmp L31
+L21 :
+mov eax, 0F0h
+L31 :
+call SetTextColor
+ret
+SetColor2 endp
+
+END main

@@ -1,0 +1,71 @@
+; 6.11.2 - 3 - test score evaluation : A(100 - 90), B(90 - 80), etc
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+Z = 5; program will generate Z  different numbers
+N = 100; upper range for RandomRange
+Score dword(N - 40), (N - 30), (N - 20), (N - 10), (N)
+Letter byte 'F', 'D', 'C', 'B', 'A'
+
+.code
+main proc
+
+call Randomize; this subroutine will seed RandomRange
+
+mov edx, Z; outer loop will generate Z different numbers
+L6:
+cmp edx, 0; loop will end when counter edx will equal to 0
+je L7
+
+mov eax, N
+call RandomRange
+call WriteDec
+
+mov ebx, eax; save random value to ebx because eax will be used later
+
+mov al, 20h; print space after decimal number
+call WriteChar
+
+mov esi, offset Score
+mov edi, offset Letter
+mov ecx, lengthof Letter
+
+L1:
+cmp ebx, [esi]; compare random number in ebx to lower limit
+jb L2; if below, jump to L2 and print corresponding letter
+cmp ebx, [esi + 4]; compare random number in ebx to closest bigger value
+jbe L3; if its in range between esi and esi + 4, jump to L3 and print corresponding letter
+jmp L4; if random value in ebx is bigger than esi and esi+4, jump to L4 and go to next range
+L2:
+mov al, [edi]
+call WriteChar
+jmp L5
+L3:
+mov al, [edi+1]
+call WriteChar
+jmp L5
+L4:
+add esi, type dword
+inc edi
+loop L1
+
+L5:
+
+call Crlf
+call Crlf
+dec edx; counter of outer loop
+jmp L6
+L7:
+
+exit
+main endp
+
+; invoke ExitProcess, 0
+end main

@@ -1,0 +1,41 @@
+; 5.8.2 Algorithm workbench - 3 - reserve space for two variables and then assign the values to these local variables
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+array DWORD 4 DUP(0)
+
+.code
+main PROC
+
+mov eax, 1
+push eax; let s put some value in the stack
+sub esp, type dword; reserved space for the first dword
+sub esp, type dword; reserved space for the second dword
+push eax; let s put another value in the stack
+
+mov ebx, esp; save esp before we go back to reserved space
+
+; this block goes back to reserved space and adds two variables
+add esp, 3 * type dword; we move 3 position upwards
+push 1000h
+push 2000h
+
+mov esp, ebx; now esp points to the lowest value in the stack
+
+;move values from stack to an array
+mov edi, offset array
+mov ecx, lengthof array
+L1:
+pop eax
+mov[edi], eax
+add edi, type array
+loop L1
+
+INVOKE ExitProcess, 0
+main ENDP
+
+END main

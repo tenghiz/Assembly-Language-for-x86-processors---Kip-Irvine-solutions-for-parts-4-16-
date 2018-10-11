@@ -1,0 +1,61 @@
+; 8.11 - 6 - Swap
+
+INCLUDE Irvine32.inc
+
+; .386
+; .model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+swap proto,
+val1 : dword,
+val2:dword,
+val3:dword
+
+.data
+
+array1 dword 10 dup(0)
+
+.code
+main PROC
+
+call FillArray
+
+invoke swap, addr array1, addr [array1+type array1], lengthof array1/2
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+FillArray proc
+mov ecx, lengthof array1
+mov esi, offset array1
+call Randomize
+L1 :
+mov eax, 10d
+call RandomRange
+add eax, 30h
+mov[esi], eax
+add esi, type array1
+loop L1
+ret
+FillArray endp
+
+swap proc,
+val1:dword,
+val2:dword,
+val3:dword
+mov esi, val1
+mov edi, val2
+mov ecx, val3
+L2:
+mov eax, [esi]
+xchg eax, [edi]
+mov [esi], eax
+add esi, 2*type array1
+add edi, 2*type array1
+loop L2
+ret
+swap endp
+
+END main

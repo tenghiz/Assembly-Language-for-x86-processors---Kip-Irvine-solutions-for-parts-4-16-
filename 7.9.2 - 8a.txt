@@ -1,0 +1,35 @@
+; 7.9.2 - 8 - shift three memory word to the left by 1 bit
+;using shld instruction
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+wordArray WORD 810Dh, 0C064h, 93ABh	
+
+.code
+main PROC
+
+mov esi, offset wordArray
+mov ecx, lengthof wordArray -1
+L1:
+popfd
+mov ax, [esi]
+shld[esi + 2], ax, 1
+pushfd
+add esi, type wordArray
+loop L1
+
+shl wordArray, 1
+
+invoke ExitProcess, 0
+main ENDP
+
+; exit
+
+END main

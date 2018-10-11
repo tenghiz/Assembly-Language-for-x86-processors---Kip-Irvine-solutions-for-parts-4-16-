@@ -1,0 +1,141 @@
+; 8.11 - 2 - Chess table
+
+; Quite big and unoptimized program for such a simple task.
+; Here two different subroutines are used to draw 2 sequences of squares:
+; 1: white-grey-white, 2: grey-white-grey.
+
+; See explanations lower.
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+mov dh, 0
+
+mov ecx, 4
+L100:
+push ecx
+call proc1
+call proc2
+call Crlf
+pop ecx
+loop L100
+
+call Crlf
+call Crlf
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+; -------------------------- -
+;Each square consist of 6 horizontal 'spaces' and 3 vertical 'spaces'
+; First step : draw 6 'spaces' of color1;
+; Second step : draw 1 sequence of white + grey spaces;
+; Third step : draw a stripped line of different colors;
+; Fourth step : draw 3 times whole stripped line, thus 1st line of squares will be formed.
+
+proc1 proc
+
+mov ecx, 3; the height of line of squares
+L5 :
+push ecx
+
+mov dl, 0
+
+L3 :
+cmp dl, 48d; the length of stripped line(48 / 6 = 8 squares)
+je L1; jump out of loop when whole stripped line is drawn
+call Gotoxy
+
+mov eax, 0F0h; white color
+jmp L9
+L8 :
+movzx eax, dl; 1 grey square + 1 white square = 12 'spaces'
+mov bl, 12
+div bl; division is used to check whether the sequence 1 grey square + 1 white square was drawn
+cmp ah, 0
+jz L3
+mov eax, 070h; grey color
+L9 :
+call SetTextColor
+
+L4 :
+
+mov ecx, 6; here 6 'spaces' are drawn
+L2 :
+mov al, 20h
+call WriteChar
+loop L2
+
+add dl, 6; after first 6 'spaces' are drawn, jump to draw 6 'spaces' of another color
+
+jmp L8
+
+L1 :
+
+inc dh; here DH increased in order to draw next whole horizontal strippd line
+pop ecx
+loop L5
+
+ret
+proc1 endp
+
+;---------------------------------
+
+proc2 proc
+
+mov ecx, 3
+L51:
+push ecx
+
+mov dl, 0
+
+L31 :
+cmp dl, 48d
+je L11
+call Gotoxy
+
+mov eax, 070h
+jmp L91
+L81 :
+movzx eax, dl
+mov bl, 12
+div bl
+cmp ah, 0
+jz L31
+mov eax, 0F0h
+L91 :
+call SetTextColor
+
+L41 :
+
+mov ecx, 6
+L21 :
+mov al, 20h
+call WriteChar
+loop L21
+
+add dl, 6
+
+jmp L81
+
+L11 :
+
+inc dh
+pop ecx
+loop L51
+
+ret
+proc2 endp
+;---------------------------------
+
+END main

@@ -1,0 +1,29 @@
+; 5.8.2 Algorithm workbench - 2
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+array DWORD 4 DUP(0)
+
+.code
+main PROC
+
+mov eax, 0
+push offset subrout
+jmp subrout1
+subrout:
+add eax,9
+call subrout1
+
+INVOKE ExitProcess, 0
+main ENDP
+
+subrout1 proc
+add eax, 1
+ret
+subrout1 endp
+
+END main

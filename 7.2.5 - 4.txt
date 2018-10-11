@@ -1,0 +1,48 @@
+; 7.2.5 - 4 - extracting file data field - time stamp
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+sec byte ?
+min byte ?
+hour byte ?
+
+.code
+main PROC
+
+call time
+
+invoke ExitProcess, 0
+main ENDP
+
+time proc
+
+; mov ax time stamp - bits 0 - 4 sec, bits 5 - 10 min, bits 11 - 15 hours
+mov ax, 0010100110010011b
+
+; extraction of sec
+mov bx, ax
+and bl, 00011111b
+mov sec, bl
+
+; extraction of min
+mov bx, ax
+shr bx, 5
+and bl, 00011111b
+
+; extraction of hours
+mov min, bl
+mov bl, ah
+shr bl, 3
+mov hour, bl
+ret
+time endp
+
+; exit
+
+END main

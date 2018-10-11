@@ -1,0 +1,70 @@
+; 6.11.2 - 7 - Probabilities and Colors
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+prompt byte "This is my text", 0
+
+process dword colour1
+dword colour2
+dword colour3
+
+.code
+main PROC
+
+call Randomize
+
+mov ecx, 20
+L3:
+mov eax, 10
+call RandomRange
+
+mov esi, offset process
+cmp eax, 2
+jbe L1
+add esi, type process
+cmp eax, 3
+je L1
+add esi, type process
+cmp eax, 4
+jae L1
+
+L1:
+call near ptr [esi]
+call SetTextColor
+mov edx, OFFSET prompt
+call Crlf
+call WriteString
+loop L3
+
+mov eax, lightGray + (black * 16)
+call SetTextColor
+call Crlf
+call Crlf
+
+exit
+main ENDP
+
+colour1 proc
+mov eax, blue + (lightGray * 16)
+ret
+colour1 endp
+
+colour2 proc
+mov eax, yellow + (magenta * 16)
+ret
+colour2 endp
+
+colour3 proc
+mov eax, red + (green * 16)
+ret
+colour3 endp
+
+; invoke ExitProcess, 0
+END main

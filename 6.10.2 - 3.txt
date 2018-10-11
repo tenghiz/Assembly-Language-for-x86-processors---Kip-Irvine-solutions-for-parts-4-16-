@@ -1,0 +1,33 @@
+; 6.10.2-3 - generate a string, which represents only members of SetX
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+SetX dword 10101001110010101100110010011001b
+SetY dword 10001101100110111100000010001000b
+
+.code
+main proc
+
+mov eax, SetX
+mov ebx, SetY
+or eax, ebx
+xor eax, ebx
+
+mov eax, SetX
+mov ebx, SetY
+not eax
+or eax, ebx
+not eax
+
+mov eax, SetX
+mov ebx, SetY
+not ebx
+and eax, ebx
+
+	invoke ExitProcess,0
+main endp
+end main

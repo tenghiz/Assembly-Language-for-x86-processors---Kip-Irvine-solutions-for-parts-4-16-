@@ -1,0 +1,30 @@
+; AddVariables.asm - Chapter 3 example.
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+; p. 136 Programming exercises, ex. 2 - Exchanging Pairs of Array Values
+
+array1 byte 10h, 20h, 30h, 40h, 50h, 60h
+
+.code
+main PROC
+
+mov esi, offset array1
+mov edi, offset array1+1
+mov ecx, lengthof array1/2
+L1:
+mov al, [esi]
+xchg al, [edi]
+mov [esi], al
+add esi, 2
+add edi, 2
+loop L1
+	
+	invoke ExitProcess,0
+main endp
+end main

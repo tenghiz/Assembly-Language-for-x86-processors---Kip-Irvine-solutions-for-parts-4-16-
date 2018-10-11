@@ -1,0 +1,51 @@
+; 5.9.10 - Fibonacci numbers
+
+comment @
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+@
+
+INCLUDE Irvine32.inc
+
+.data
+fibo dword 15 dup (0)
+
+.code
+main PROC
+mov ecx, 15
+mov eax, 0
+mov ebx, 1
+mov esi, offset fibo
+mov [esi], ebx
+call CalcSum
+
+mov ecx, 15
+mov esi, offset fibo
+L1:
+mov eax, [esi]
+call WriteDec
+call Crlf
+add esi, type dword
+loop L1
+
+; INVOKE ExitProcess, 0
+exit
+main ENDP
+
+CalcSum PROC
+cmp ecx, 0
+jz L2
+add eax, ebx
+add esi, type dword
+mov [esi], eax
+add ebx, eax
+add esi, type dword
+mov[esi], ebx
+dec ecx
+call CalcSum
+L2: 
+ret
+CalcSum ENDP
+end main

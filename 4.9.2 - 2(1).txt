@@ -1,0 +1,28 @@
+; AddVariables.asm - Chapter 3 example.
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+; p. 136 Algorithm workbench, ex. 2 - the values in four 8-bit registers from the order A,B,C,D to B,C,D,A.
+array1 byte 10h, 20h, 30h, 40h
+array2 byte 4 dup(0)
+
+.code
+main PROC
+		
+mov al, array1
+mov array2 + 3, al
+mov al, array1 + 1
+mov array2, al
+mov al, array1 + 2
+mov array2 + 1, al
+mov al, array1 + 3
+mov array2 + 2, al
+	
+invoke ExitProcess,0
+main endp
+end main

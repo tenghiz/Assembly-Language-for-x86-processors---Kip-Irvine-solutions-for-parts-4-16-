@@ -1,0 +1,73 @@
+; 8.10.2 - 6
+; create local variable which holds 8 - bit signed integer
+
+; COMMENTS
+; Stack is composed of dword - sections, so the local variable always has a size of dword,
+; even if it is declared as local : byte or local dword.
+; This is the case of procedure AddThree3.
+; Directive local : byte permits to mov in stack some number,
+; however, command mov eax, myByte gives false result(00000000).
+
+; Procedure AddThree and AddThree use directive LOCAL myByte : PTR BYTE,
+; which is followed by mov eax, myByte.
+; In this case command mov eax, myByte gives desired result.
+; However, the whole dword is moved, and not a byte
+
+; LEA instruction permits to overcome this limitation;
+;Check AddThree2
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+var1 byte 15h
+
+.code
+main PROC
+
+call AddThree
+call AddThree1
+call AddThree2
+call AddThree3
+
+invoke ExitProcess, 0
+; exit
+main ENDP
+
+AddThree proc
+local myByte : ptr sbyte
+add esp, 4
+push 9
+mov eax, dword ptr myByte
+ret
+AddThree endp
+
+AddThree1 proc
+local myByte : ptr byte
+mov dword ptr[ebp - 4], 700
+mov eax, myByte
+ret
+AddThree1 endp
+
+AddThree2 proc
+local myByte : byte
+lea esi, [ebp - 1]
+mov bl, var1; [esi] don t accept memory value, register should be used as an intermediate
+mov [esi], bl
+movzx eax, myByte
+ret
+AddThree2 endp
+
+AddThree3 proc
+local myByte : byte
+mov dword ptr[ebp - 4], 700
+movzx eax, myByte
+ret
+AddThree3 endp
+
+END main

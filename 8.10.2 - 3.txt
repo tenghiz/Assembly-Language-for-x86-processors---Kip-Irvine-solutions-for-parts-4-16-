@@ -1,0 +1,54 @@
+; 8.10.2 - 3
+; create local variable that is a pointer to an array
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+arr dword 1234h, 5678h, 9123h, 4567h
+arr1 dword 1, 2, 3, 4
+
+.code
+main PROC
+
+call AddThree
+call ThreeAdd
+
+invoke ExitProcess, 0
+; exit
+main ENDP
+
+; create local variable withut name
+AddThree proc
+push ebp
+mov ebp, esp
+push offset arr
+mov esi, [ebp - 4]
+mov eax, [esi]
+mov ebx, [esi + 4]
+mov ecx, [esi + 8]
+mov edx, [esi + 12]
+mov esp, ebp
+pop ebp
+ret
+AddThree endp
+
+;create local variable with name
+ThreeAdd proc
+local pArray:dword
+add esp, 4
+push offset arr1
+mov esi, pArray
+mov eax, [esi]
+mov ebx, [esi + 4]
+mov ecx, [esi + 8]
+mov edx, [esi + 12]
+ret
+ThreeAdd endp
+
+END main

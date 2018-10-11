@@ -1,0 +1,39 @@
+; 7.1.10 - 5 - Shift a lowest bit of AX to highest bit of BX without using SHRD
+
+; INCLUDE Irvine32.inc
+
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess proto, dwExitCode:dword
+
+.data
+
+.code
+main PROC
+
+; using shrd
+
+mov eax, 0
+mov ax, 10100101b
+mov ebx, 0
+mov bx, 01011010b
+shrd bx, ax, 1; !!!source operand unchanged
+
+;without using shrd
+
+mov eax, 0
+mov ax, 10100101b
+push eax
+shr ax, 1; shift to the right, lowest bit is copied to carry flag
+mov ebx, 0
+mov bx, 01011010b
+rcr bx, 1; carry flag is copied to the highest bit of bx, all bits are shifted to the right
+pop eax
+
+invoke ExitProcess, 0
+
+; exit
+main ENDP
+
+END main

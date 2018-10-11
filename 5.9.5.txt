@@ -1,0 +1,45 @@
+; 5.9.5 - BetterRandomRange
+
+comment @
+.386
+.model flat, stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+@
+
+INCLUDE Irvine32.inc
+
+.data
+prompt BYTE "Enter lower bound M: ", 0
+prompt1 BYTE "Enter upper bound N: ", 0
+prompt3 BYTE "This is random number in range between M and N-1: ", 0
+
+.code
+main PROC
+
+mov ecx, 3
+L1:
+mov edx, OFFSET prompt
+call WriteString
+call ReadInt
+mov ebx, eax
+call Crlf
+mov edx, OFFSET prompt1
+call WriteString
+call ReadInt
+sub eax, ebx
+call RandomRange
+add eax, ebx
+call Crlf
+mov edx, OFFSET prompt3
+call WriteString
+call WriteInt
+call Crlf
+call Crlf
+loop L1
+
+exit
+
+; INVOKE ExitProcess, 0
+main ENDP
+END main

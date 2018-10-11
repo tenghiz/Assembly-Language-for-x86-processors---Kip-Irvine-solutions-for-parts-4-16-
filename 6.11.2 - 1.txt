@@ -1,0 +1,43 @@
+6.11.2 - 1
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+; .stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+N = 10
+j = 8
+k = 88
+array1 dword N dup(0)
+
+.code
+main proc
+
+call myProc
+
+exit
+main endp
+
+myProc proc
+mov edx, esp; save esp
+; pushad; push all registers to stack
+mov ecx, N
+mov esi, offset array1
+L1:
+mov eax, k
+call RandomRange
+cmp eax, j
+jb L1
+mov[esi], eax
+add esi, type array1
+loop L1
+; popad; pop all registers from stack
+mov esp, edx; restore esp
+ret
+myProc endp
+
+; invoke ExitProcess, 0
+end main

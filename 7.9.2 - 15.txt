@@ -1,0 +1,30 @@
+; 7.10.2 - 15 - Using only SUB, MOV, and AND instructions,
+; show how to calculate x = n mod y.You can assume Y is a power of 2.
+
+; a mod 2 ^ i = a & (2 ^ i–1)
+
+INCLUDE Irvine32.inc
+
+; .386
+;.model flat, stdcall
+;.stack 4096
+; ExitProcess proto, dwExitCode:dword
+
+.data
+
+dividend byte 4Fh
+divisor byte 8; only power of 2 is allowed
+
+.code
+main PROC
+
+mov al, dividend
+mov bl, divisor
+sub bl, 1
+and al, bl
+
+; invoke ExitProcess, 0
+exit
+main ENDP
+
+END main
